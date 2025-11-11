@@ -71,6 +71,28 @@ export const onUserCreate = functions.auth.user().onCreate(async (user: admin.au
  */
 
 /**
+ * File finalize trigger (optional)
+ * This can be used for additional processing after file upload
+ * Currently, files are finalized in the frontend, but this trigger
+ * can be used for future enhancements like auto-OCR triggering
+ */
+export const onFileCreate = functions.firestore
+  .document('matters/{matterId}/files/{fileId}')
+  .onCreate(async (snap, context) => {
+    const { matterId, fileId } = context.params;
+    const fileData = snap.data();
+
+    console.log(`File created: ${fileId} in matter ${matterId}, type: ${fileData.type}`);
+
+    // Future: Auto-trigger OCR for PDF files
+    // if (fileData.type === 'pdf') {
+    //   // Trigger OCR processing
+    // }
+
+    return null;
+  });
+
+/**
  * Callable function to update user profile
  * Allows frontend to update user role and other profile data
  */

@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateUserProfile = exports.onUserCreate = exports.api = void 0;
+exports.updateUserProfile = exports.onFileCreate = exports.onUserCreate = exports.api = void 0;
 const functions = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
 // Initialize Firebase Admin
@@ -95,6 +95,24 @@ exports.onUserCreate = functions.auth.user().onCreate(async (user) => {
  * Note: beforeSignIn is not available in v1, using onUserCreate for initial setup
  * We'll update lastLoginAt in the frontend after successful sign-in
  */
+/**
+ * File finalize trigger (optional)
+ * This can be used for additional processing after file upload
+ * Currently, files are finalized in the frontend, but this trigger
+ * can be used for future enhancements like auto-OCR triggering
+ */
+exports.onFileCreate = functions.firestore
+    .document('matters/{matterId}/files/{fileId}')
+    .onCreate(async (snap, context) => {
+    const { matterId, fileId } = context.params;
+    const fileData = snap.data();
+    console.log(`File created: ${fileId} in matter ${matterId}, type: ${fileData.type}`);
+    // Future: Auto-trigger OCR for PDF files
+    // if (fileData.type === 'pdf') {
+    //   // Trigger OCR processing
+    // }
+    return null;
+});
 /**
  * Callable function to update user profile
  * Allows frontend to update user role and other profile data

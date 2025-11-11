@@ -1,14 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Matter } from '../../services/matter.service';
+import { FileService, FileDocument } from '../../services/file.service';
+import { FileUpload } from '../files/FileUpload';
+import { FileList } from '../files/FileList';
+import { useAuth } from '../../hooks/useAuth';
 
 interface MatterTabsProps {
   matter: Matter;
 }
 
 export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<
     'overview' | 'files' | 'drafts' | 'activity'
   >('overview');
+  const [files, setFiles] = useState<FileDocument[]>([]);
+  const [filesLoading, setFilesLoading] = useState<boolean>(false);
+  const [filesError, setFilesError] = useState<string | null>(null);
+
+  // Load files when files tab is active
+  useEffect(() => {
+    if (activeTab === 'files' && matter.matterId) {
+      loadFiles();
+    }
+  }, [activeTab, matter.matterId]);
+
+  const loadFiles = async () => {
+    try {
+      setFilesLoading(true);
+      setFilesError(null);
+      const filesData = await FileService.getFiles(matter.matterId);
+      setFiles(filesData);
+    } catch (err: any) {
+      setFilesError(err.message || 'Failed to load files');
+    } finally {
+      setFilesLoading(false);
+    }
+  };
+
+  const handleFileUploadSuccess = () => {
+    loadFiles(); // Reload files after upload
+  };
+
+  const handleFileDeleted = (fileId: string) => {
+    setFiles(files.filter((f) => f.fileId !== fileId));
+  };
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview' },
@@ -79,11 +115,33 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
         )}
 
         {activeTab === 'files' && (
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">No files uploaded yet.</p>
-            <p className="text-sm text-gray-500">
-              File upload functionality will be available in PR #5.
-            </p>
+          <div className="space-y-6">
+            {user && (
+              <FileUpload
+                matterId={matter.matterId}
+                userId={user.uid}
+                onUploadSuccess={handleFileUploadSuccess}
+              />
+            )}
+
+            {filesError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{filesError}</p>
+              </div>
+            )}
+
+            {filesLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2 text-gray-600">Loading files...</p>
+              </div>
+            ) : (
+              <FileList
+                files={files}
+                matterId={matter.matterId}
+                onFileDeleted={handleFileDeleted}
+              />
+            )}
           </div>
         )}
 

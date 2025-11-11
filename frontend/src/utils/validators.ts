@@ -165,3 +165,84 @@ export function validateLoginForm(data: LoginFormData): {
   };
 }
 
+/**
+ * File validation utilities
+ */
+
+export type AllowedFileType = 'pdf' | 'docx' | 'txt';
+
+export interface FileValidationResult {
+  isValid: boolean;
+  error?: string;
+  fileType?: AllowedFileType;
+}
+
+/**
+ * Validate file type
+ */
+export function validateFileType(file: File): FileValidationResult {
+  const allowedExtensions = ['.pdf', '.docx', '.txt'];
+  
+  const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  
+  if (!allowedExtensions.includes(fileExtension)) {
+    return {
+      isValid: false,
+      error: `File type not allowed. Allowed types: PDF, DOCX, TXT`,
+    };
+  }
+
+  // Map extension to our type
+  let fileType: AllowedFileType;
+  if (fileExtension === '.pdf') fileType = 'pdf';
+  else if (fileExtension === '.docx') fileType = 'docx';
+  else fileType = 'txt';
+
+  return { isValid: true, fileType };
+}
+
+/**
+ * Validate file size (max 10MB)
+ */
+export function validateFileSize(file: File): FileValidationResult {
+  const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+  
+  if (file.size > maxSize) {
+    return {
+      isValid: false,
+      error: `File size exceeds 10MB limit. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`,
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Validate file (type and size)
+ */
+export function validateFile(file: File): FileValidationResult {
+  const typeResult = validateFileType(file);
+  if (!typeResult.isValid) {
+    return typeResult;
+  }
+
+  const sizeResult = validateFileSize(file);
+  if (!sizeResult.isValid) {
+    return sizeResult;
+  }
+
+  return { isValid: true, fileType: typeResult.fileType };
+}
+
+/**
+ * Format file size for display
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
