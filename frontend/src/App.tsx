@@ -5,6 +5,8 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { MatterDetail } from './pages/MatterDetail';
+import { Templates } from './pages/Templates';
+import { TemplateForm } from './components/templates/TemplateForm';
 
 function App() {
   return (
@@ -24,17 +26,41 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/matters/:matterId"
-            element={
-              <ProtectedRoute>
-                <MatterDetail />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/matters/:matterId"
+              element={
+                <ProtectedRoute>
+                  <MatterDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/templates"
+              element={
+                <ProtectedRoute>
+                  <Templates />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/templates/new"
+              element={
+                <ProtectedRoute>
+                  <TemplateForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/templates/:templateId/edit"
+              element={
+                <ProtectedRoute>
+                  <TemplateForm />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Default redirect */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
