@@ -215,6 +215,60 @@ export class DraftService {
   }
 
   /**
+   * Refine a specific section of a draft
+   */
+  static async refineSection(
+    draftId: string,
+    section: 'facts' | 'liability' | 'damages' | 'demand',
+    instruction: string,
+    _keepExistingContent: boolean = true
+  ): Promise<void> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // TODO: Call Firebase Function proxy to AWS Lambda
+      // For now, update the section with a placeholder
+      const draftRef = doc(db, 'drafts', draftId);
+      await updateDoc(draftRef, {
+        [`sections.${section}.content`]: `[Refinement in progress: ${instruction}]`,
+        [`sections.${section}.generatedAt`]: serverTimestamp(),
+        lastEditedAt: serverTimestamp(),
+        lastEditedBy: user.uid,
+        updatedAt: serverTimestamp(),
+        state: 'editing',
+      });
+
+      // TODO: Trigger AWS Lambda refinement
+      // const response = await fetch(
+      //   `${import.meta.env.VITE_API_BASE_URL}/v1/drafts:refineSection`,
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       Authorization: `Bearer ${await user.getIdToken()}`,
+      //     },
+      //     body: JSON.stringify({
+      //       draftId,
+      //       section,
+      //       instruction,
+      //       keepExistingContent,
+      //       userId: user.uid,
+      //     }),
+      //   }
+      // );
+
+      // if (!response.ok) {
+      //   throw new Error('Failed to refine section');
+      // }
+    } catch (error: any) {
+      throw new Error(`Failed to refine section: ${error.message}`);
+    }
+  }
+
+  /**
    * Delete a draft
    */
   static async deleteDraft(draftId: string): Promise<void> {

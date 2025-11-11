@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { MatterDetail } from './pages/MatterDetail';
 import { Templates } from './pages/Templates';
 import { TemplateForm } from './components/templates/TemplateForm';
+import { DraftEditor } from './pages/DraftEditor';
 
 function App() {
   return (
@@ -55,6 +56,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <TemplateForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/drafts/:draftId"
+              element={
+                <ProtectedRoute>
+                  <DraftEditor />
                 </ProtectedRoute>
               }
             />

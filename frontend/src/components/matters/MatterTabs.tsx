@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Matter } from '../../services/matter.service';
 import { FileService, FileDocument } from '../../services/file.service';
 import { DraftService, Draft } from '../../services/draft.service';
@@ -72,9 +73,10 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
     }
   };
 
-  const handleDraftGenerated = () => {
+  const handleDraftGenerated = (draftId: string) => {
     loadDrafts(); // Reload drafts after generation
-    // TODO: Navigate to draft editor when implemented
+    // Navigate to draft editor
+    window.location.href = `/drafts/${draftId}`;
   };
 
   const tabs = [
@@ -238,15 +240,12 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
                           Generated {new Date(draft.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <button
-                        onClick={() => {
-                          // TODO: Navigate to draft editor
-                          alert('Draft editor coming soon');
-                        }}
+                      <Link
+                        to={`/drafts/${draft.draftId}`}
                         className="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
                       >
                         Edit
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 ))}

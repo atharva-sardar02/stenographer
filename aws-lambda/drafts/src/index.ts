@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { generateDraft, GenerateDraftRequest } from './generate';
+import { refineSection, RefineSectionRequest } from './refine';
 
 /**
  * Draft generation handler
@@ -79,6 +80,107 @@ export const generate = async (
       },
       body: JSON.stringify({
         error: 'Draft generation failed',
+        message: error.message,
+      }),
+    };
+  }
+};
+
+/**
+ * Section refinement handler
+ * POST /v1/drafts:refineSection
+ * 
+ * Expected request body:
+ * {
+ *   "draftId": "draft-id",
+ *   "section": "facts" | "liability" | "damages" | "demand",
+ *   "instruction": "Add more detail on pain and suffering",
+ *   "keepExistingContent": true,
+ *   "userId": "user-id"
+ * }
+ */
+export const refineSectionHandler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  try {
+    // Parse request body
+    if (!event.body) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({ error: 'Request body is required' }),
+      };
+    }
+
+    const requestData: RefineSectionRequest = JSON.parse(event.body);
+    const { draftId, section, instruction, keepExistingContent, userId } = requestData;
+
+    // Validate required fields
+    if (!draftId || !section || !instruction || !userId) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          error: 'draftId, section, instruction, and userId are required',
+        }),
+      };
+    }
+
+    // Validate section name
+    const validSections = ['facts', 'liability', 'damages', 'demand'];
+    if (!validSections.includes(section)) {
+      return {
+        statusCode: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+        body: JSON.stringify({
+          error: `Invalid section. Must be one of: ${validSections.join(', ')}`,
+        }),
+      };
+    }
+
+    // Refine section
+    const result = await refineSection({
+      draftId,
+      section,
+      instruction,
+      keepExistingContent: keepExistingContent !== undefined ? keepExistingContent : true,
+      userId,
+    });
+
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify({
+        success: true,
+        section,
+        content: result.content,
+        tokensUsed: result.tokensUsed,
+        message: 'Section refined successfully',
+      }),
+    };
+  } catch (error: any) {
+    console.error('Section refinement error:', error);
+
+    return {
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+      body: JSON.stringify({
+        error: 'Section refinement failed',
         message: error.message,
       }),
     };
