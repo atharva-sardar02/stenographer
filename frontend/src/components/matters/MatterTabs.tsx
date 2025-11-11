@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Matter } from '../../services/matter.service';
 import { FileService, FileDocument } from '../../services/file.service';
+import { DraftService, Draft } from '../../services/draft.service';
 import { FileUpload } from '../files/FileUpload';
 import { FileList } from '../files/FileList';
+import { GenerateDraftModal } from '../drafts/GenerateDraftModal';
 import { useAuth } from '../../hooks/useAuth';
 
 interface MatterTabsProps {
@@ -17,11 +19,22 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
   const [files, setFiles] = useState<FileDocument[]>([]);
   const [filesLoading, setFilesLoading] = useState<boolean>(false);
   const [filesError, setFilesError] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Draft[]>([]);
+  const [draftsLoading, setDraftsLoading] = useState<boolean>(false);
+  const [draftsError, setDraftsError] = useState<string | null>(null);
+  const [isGenerateModalOpen, setIsGenerateModalOpen] = useState<boolean>(false);
 
   // Load files when files tab is active
   useEffect(() => {
     if (activeTab === 'files' && matter.matterId) {
       loadFiles();
+    }
+  }, [activeTab, matter.matterId]);
+
+  // Load drafts when drafts tab is active
+  useEffect(() => {
+    if (activeTab === 'drafts' && matter.matterId) {
+      loadDrafts();
     }
   }, [activeTab, matter.matterId]);
 
@@ -44,6 +57,24 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
 
   const handleFileDeleted = (fileId: string) => {
     setFiles(files.filter((f) => f.fileId !== fileId));
+  };
+
+  const loadDrafts = async () => {
+    try {
+      setDraftsLoading(true);
+      setDraftsError(null);
+      const draftsData = await DraftService.getDrafts(matter.matterId);
+      setDrafts(draftsData);
+    } catch (err: any) {
+      setDraftsError(err.message || 'Failed to load drafts');
+    } finally {
+      setDraftsLoading(false);
+    }
+  };
+
+  const handleDraftGenerated = () => {
+    loadDrafts(); // Reload drafts after generation
+    // TODO: Navigate to draft editor when implemented
   };
 
   const tabs = [
@@ -146,11 +177,88 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
         )}
 
         {activeTab === 'drafts' && (
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">No drafts created yet.</p>
-            <p className="text-sm text-gray-500">
-              Draft generation functionality will be available in PR #6.
-            </p>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Drafts</h3>
+              <button
+                onClick={() => setIsGenerateModalOpen(true)}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                + Generate New Draft
+              </button>
+            </div>
+
+            {draftsError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">{draftsError}</p>
+              </div>
+            )}
+
+            {draftsLoading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="mt-2 text-gray-600">Loading drafts...</p>
+              </div>
+            ) : drafts.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <p className="text-gray-600 mb-4">No drafts created yet.</p>
+                <button
+                  onClick={() => setIsGenerateModalOpen(true)}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                >
+                  Generate Your First Draft
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {drafts.map((draft) => (
+                  <div
+                    key={draft.draftId}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="text-base font-semibold text-gray-900">
+                            Draft #{draft.draftId.slice(0, 8)}
+                          </h4>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              draft.state === 'generating'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : draft.state === 'editing'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-green-100 text-green-800'
+                            }`}
+                          >
+                            {draft.state}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Generated {new Date(draft.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          // TODO: Navigate to draft editor
+                          alert('Draft editor coming soon');
+                        }}
+                        className="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+                      >
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <GenerateDraftModal
+              isOpen={isGenerateModalOpen}
+              onClose={() => setIsGenerateModalOpen(false)}
+              onSuccess={handleDraftGenerated}
+              matterId={matter.matterId}
+            />
           </div>
         )}
 

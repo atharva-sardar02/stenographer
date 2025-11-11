@@ -74,6 +74,53 @@ export const ocrExtract = functions
   });
 
 /**
+ * Draft generation proxy endpoint
+ * POST /api/v1/drafts:generate
+ * Proxies draft generation requests to AWS Lambda
+ */
+export const draftGenerate = functions
+  .region('us-central1')
+  .https
+  .onRequest(async (request: functions.Request, response: functions.Response) => {
+    // CORS handling
+    response.set('Access-Control-Allow-Origin', '*');
+    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (request.method === 'OPTIONS') {
+      response.status(204).send('');
+      return;
+    }
+
+    if (request.method !== 'POST') {
+      response.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
+
+    try {
+      // TODO: Verify Firebase ID token
+      // const authHeader = request.headers.authorization;
+      // if (!authHeader) {
+      //   response.status(401).json({ error: 'Unauthorized' });
+      //   return;
+      // }
+
+      // TODO: Forward request to AWS Lambda draft generation function
+      // For now, return a placeholder response
+      response.status(200).json({
+        message: 'Draft generation endpoint - AWS Lambda integration pending',
+        note: 'This will forward to AWS Lambda draft generation function when configured',
+      });
+    } catch (error: any) {
+      console.error('Draft generation proxy error:', error);
+      response.status(500).json({
+        error: 'Internal server error',
+        message: error.message,
+      });
+    }
+  });
+
+/**
  * User creation trigger
  * Automatically creates a user document in Firestore when a new user signs up
  */

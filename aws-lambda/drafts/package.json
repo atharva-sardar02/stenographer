@@ -1,0 +1,24 @@
+{
+  "name": "stenographer-drafts",
+  "version": "0.1.0",
+  "description": "AWS Lambda function for AI draft generation using OpenAI",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@stenographer/shared": "file:../shared",
+    "openai": "^4.20.1",
+    "firebase-admin": "^13.6.0",
+    "@aws-sdk/client-secrets-manager": "^3.450.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.119",
+    "@types/node": "^20.10.5",
+    "typescript": "^5.2.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11"
+  }
+}
+
