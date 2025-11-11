@@ -1,5 +1,6 @@
 import { formatFileSize } from '../../utils/validators';
 import { FileService, FileDocument } from '../../services/file.service';
+import { OcrStatusBadge } from './OcrStatusBadge';
 
 interface FileCardProps {
   file: FileDocument;
@@ -32,25 +33,17 @@ export const FileCard: React.FC<FileCardProps> = ({ file, matterId, onDelete }) 
     }
   };
 
-  const getOcrStatusBadge = () => {
-    if (!file.ocrStatus) return null;
+  const handleRetryOcr = async () => {
+    if (file.type !== 'pdf') {
+      alert('OCR is only available for PDF files');
+      return;
+    }
 
-    const statusColors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      processing: 'bg-blue-100 text-blue-800',
-      done: 'bg-green-100 text-green-800',
-      failed: 'bg-red-100 text-red-800',
-    };
-
-    return (
-      <span
-        className={`px-2 py-1 rounded-full text-xs font-medium capitalize ${
-          statusColors[file.ocrStatus] || 'bg-gray-100 text-gray-800'
-        }`}
-      >
-        OCR: {file.ocrStatus}
-      </span>
-    );
+    try {
+      await FileService.triggerOcr(matterId, file.fileId, file.storagePath);
+    } catch (error: any) {
+      alert(`Failed to trigger OCR: ${error.message}`);
+    }
   };
 
   const handleDownload = async () => {
@@ -90,8 +83,18 @@ export const FileCard: React.FC<FileCardProps> = ({ file, matterId, onDelete }) 
               <span>•</span>
               <span>Uploaded {formatDate(file.uploadedAt)}</span>
             </div>
-            {getOcrStatusBadge() && (
-              <div className="mt-2">{getOcrStatusBadge()}</div>
+            {file.ocrStatus && (
+              <div className="mt-2">
+                <OcrStatusBadge file={file} />
+                {file.ocrStatus === 'failed' && file.type === 'pdf' && (
+                  <button
+                    onClick={handleRetryOcr}
+                    className="mt-2 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+                  >
+                    Retry OCR
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>

@@ -8,6 +8,7 @@ import {
   orderBy,
   serverTimestamp,
   getDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
@@ -222,6 +223,55 @@ export class FileService {
       return await getDownloadURL(storageRef);
     } catch (error: any) {
       throw new Error(`Failed to get download URL: ${error.message}`);
+    }
+  }
+
+  /**
+   * Trigger OCR processing for a file
+   * Note: This requires AWS Lambda integration
+   */
+  static async triggerOcr(
+    matterId: string,
+    fileId: string,
+    _storagePath: string
+  ): Promise<void> {
+    try {
+      // Update file status to processing
+      const fileRef = doc(db, 'matters', matterId, 'files', fileId);
+      await updateDoc(fileRef, {
+        ocrStatus: 'processing',
+        ocrError: null,
+      });
+
+      // TODO: Call Firebase Function proxy to AWS Lambda OCR endpoint
+      // For now, this is a placeholder
+      // const response = await fetch(
+      //   `${import.meta.env.VITE_API_BASE_URL}/v1/ocr:extract`,
+      //   {
+      //     method: 'POST',
+      //     headers: {
+      //       'Content-Type': 'application/json',
+      //       Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
+      //     },
+      //     body: JSON.stringify({
+      //       matterId,
+      //       fileId,
+      //       storagePath,
+      //     }),
+      //   }
+      // );
+
+      // if (!response.ok) {
+      //   throw new Error('Failed to trigger OCR');
+      // }
+    } catch (error: any) {
+      // Update file status to failed
+      const fileRef = doc(db, 'matters', matterId, 'files', fileId);
+      await updateDoc(fileRef, {
+        ocrStatus: 'failed',
+        ocrError: error.message || 'Failed to trigger OCR',
+      });
+      throw new Error(`Failed to trigger OCR: ${error.message}`);
     }
   }
 
