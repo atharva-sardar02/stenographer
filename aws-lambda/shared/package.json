@@ -1,0 +1,17 @@
+{
+  "name": "@stenographer/shared",
+  "version": "0.1.0",
+  "description": "Shared utilities and types for AWS Lambda functions",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1500.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.2.2"
+  }
+}
+

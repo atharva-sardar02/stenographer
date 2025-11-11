@@ -1,0 +1,211 @@
+{
+  "tags": {
+    "master": {
+      "tasks": [
+        {
+          "id": "1",
+          "title": "PR #1: Project Setup & Infrastructure",
+          "description": "Initialize project structure, configure build tools, set up Firebase and AWS infrastructure",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": [],
+          "details": "Files: README.md, .gitignore, frontend/package.json, firebase/firebase.json, aws-lambda setup, GitHub Actions workflows. Initialize monorepo structure, set up React + Vite + TypeScript frontend, configure Firebase project, set up AWS infrastructure (IAM roles, API Gateway, Secrets Manager), create shared types package, set up CI/CD pipelines, create initial documentation.",
+          "testStrategy": "Unit Test: Validate build configurations (Vite, TypeScript compile successfully). Integration Test: Deploy 'Hello World' to Firebase Hosting and verify access.",
+          "subtasks": []
+        },
+        {
+          "id": "2",
+          "title": "PR #2: Authentication & User Management",
+          "description": "Implement Firebase Authentication with Email/Password and Google OAuth, create user profiles in Firestore",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["1"],
+          "details": "Files: auth.service.ts, AuthContext.tsx, useAuth.ts, Login.tsx, Signup.tsx, LoginForm.tsx, GoogleAuthButton.tsx, validators.ts, Firebase Functions triggers. Enable Firebase Auth providers, create auth service with signUp/signIn/signOut methods, build AuthContext and hooks, create Login/Signup UI with role selection, add Firebase Function trigger for user creation, implement protected route wrapper.",
+          "testStrategy": "Unit Test: Validate email/password format. Unit Test: Mock auth service methods. Integration Test: End-to-end signup flow. Integration Test: Login with email/password and Google OAuth.",
+          "subtasks": []
+        },
+        {
+          "id": "3",
+          "title": "PR #3: Firestore Schema & Security Rules",
+          "description": "Define Firestore data model, implement security rules for all collections",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["1"],
+          "details": "Files: firestore.rules, firestore.indexes.json, shared/types/*.ts, data-model.md. Define TypeScript types for all collections (User, Matter, File, Template, Draft, Export, Job), write Firestore security rules with role-based access, define composite indexes for common queries, deploy rules and indexes, document data model.",
+          "testStrategy": "Unit Test: Use @firebase/rules-unit-testing to test security rules. Integration Test: Simulate various user roles and verify Firestore access patterns.",
+          "subtasks": []
+        },
+        {
+          "id": "4",
+          "title": "PR #4: Matter Management (Dashboard & CRUD)",
+          "description": "Implement matter creation, listing, and detail views in the UI",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["2", "3"],
+          "details": "Files: matter.service.ts, Dashboard.tsx, MatterDetail.tsx, MatterCard.tsx, CreateMatterModal.tsx, MatterTabs.tsx, useFirestore.ts. Create matter service with CRUD operations, build Dashboard page with filtering and search, build CreateMatterModal component, build MatterDetail page with tabs, add navigation and routing.",
+          "testStrategy": "Unit Test: Validate matter form inputs. Integration Test: Create matter and verify Firestore document created. Integration Test: List matters and verify filtering/search works.",
+          "subtasks": []
+        },
+        {
+          "id": "5",
+          "title": "PR #5: File Upload & Storage",
+          "description": "Implement file upload to Firebase Storage with progress tracking and validation",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["3", "4"],
+          "details": "Files: file.service.ts, FileUpload.tsx, FileList.tsx, FileCard.tsx, validators.ts, storage.rules, AWS Lambda upload handlers. Set up Firebase Storage rules, create AWS Lambda for uploadInit and finalize, build file upload UI with drag-and-drop, create file service, build FileList component, integrate into MatterDetail page.",
+          "testStrategy": "Unit Test: File validation logic. Unit Test: Verify purgeAt calculation. Integration Test: Full upload flow. Integration Test: Upload oversized file and verify rejection.",
+          "subtasks": []
+        },
+        {
+          "id": "6",
+          "title": "PR #6: OCR Processing (AWS Textract)",
+          "description": "Implement OCR for scanned PDFs using AWS Textract, update file status",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["5"],
+          "details": "Files: aws-lambda/ocr/src/index.ts, textract.ts, OcrStatusBadge.tsx. Create AWS Lambda for OCR extraction, modify file finalize handler to auto-trigger OCR, create Firebase Function proxy, build OcrStatusBadge component, add manual OCR trigger button, handle OCR completion in UI.",
+          "testStrategy": "Unit Test: Mock Textract API response and verify parsing logic. Unit Test: Verify confidence threshold logic. Integration Test: Upload scanned PDF, trigger OCR, verify text extracted. Integration Test: Upload non-scanned PDF, verify OCR handling.",
+          "subtasks": []
+        },
+        {
+          "id": "7",
+          "title": "PR #7: Template Management (CRUD)",
+          "description": "Implement template creation, editing, listing, and preview",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["3"],
+          "details": "Files: template.service.ts, Templates.tsx, TemplateCard.tsx, TemplateForm.tsx, SectionEditor.tsx, VariableManager.tsx, TemplatePreview.tsx, AWS Lambda template handlers. Create AWS Lambda for template CRUD, create Firebase Function proxy endpoints, build template service, build Templates list page, build TemplateForm component, build SectionEditor and VariableManager components, add template selection in draft generation flow.",
+          "testStrategy": "Unit Test: Template validation. Unit Test: Variable syntax validation. Integration Test: Create template, verify saved to Firestore. Integration Test: Attorney can create/edit templates, paralegal can only read. Integration Test: Delete template and verify removed.",
+          "subtasks": []
+        },
+        {
+          "id": "8",
+          "title": "PR #8: AI Draft Generation (OpenAI)",
+          "description": "Implement AI-powered draft generation from source files and templates using OpenAI API",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["5", "6", "7"],
+          "details": "Files: aws-lambda/drafts/src/generate.ts, prompts.ts, openai.ts, draft.service.ts, GenerateDraftModal.tsx, VariableInputForm.tsx, GenerationProgress.tsx. Set up OpenAI API credentials in AWS Secrets Manager, create OpenAI wrapper, create prompt templates, create draft generation handler with section-by-section generation, create Firebase Function proxy, build draft service, build GenerateDraftModal component, build GenerationProgress component, handle draft completion, add error handling.",
+          "testStrategy": "Unit Test: Prompt template generation with variable substitution. Unit Test: Mock OpenAI API response and verify parsing. Unit Test: Test retry logic. Integration Test: End-to-end draft generation with real OpenAI API. Integration Test: Test with missing/invalid template and verify error handling.",
+          "subtasks": []
+        },
+        {
+          "id": "9",
+          "title": "PR #9: Draft Refinement (Section Regeneration)",
+          "description": "Allow users to regenerate specific sections with custom instructions",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": ["8"],
+          "details": "Files: aws-lambda/drafts/src/refine.ts, RefineSectionModal.tsx. Create refinement handler, create Firebase Function proxy, add refineSection() to draft service, build RefineSectionModal component, add 'Refine Section' buttons in DraftEditor, show refinement progress, track refinements in collaboration history.",
+          "testStrategy": "Unit Test: Verify refined prompt includes original content + user instruction. Integration Test: Generate draft, then refine 'Damages' section. Integration Test: Test 'keep existing content' vs 'rewrite completely' modes.",
+          "subtasks": []
+        },
+        {
+          "id": "10",
+          "title": "PR #10: Rich Text Editor Integration (TipTap)",
+          "description": "Integrate TipTap editor for draft editing with formatting tools",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["8"],
+          "details": "Files: TipTapEditor.tsx, EditorToolbar.tsx, EditorMenuBar.tsx, DraftEditor.tsx, useEditor.ts. Install TipTap dependencies, build TipTapEditor component, build EditorToolbar component, build DraftEditor page, create useEditor hook, add routing, style editor.",
+          "testStrategy": "Unit Test: Verify auto-save debounce logic. Integration Test: Load draft, make edits, verify changes saved to Firestore. Integration Test: Test undo/redo functionality.",
+          "subtasks": []
+        },
+        {
+          "id": "11",
+          "title": "PR #11: Real-Time Collaboration & Change Tracking",
+          "description": "Implement basic real-time collaboration with change tracking and presence indicators",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["10"],
+          "details": "Files: CollaborationContext.tsx, useCollaboration.ts, PresenceIndicator.tsx, ChangeHistory.tsx, ChangeItem.tsx. Set up Firestore listeners for collaboration, implement presence tracking, create CollaborationContext, build PresenceIndicator component, implement change tracking, build ChangeHistory component, integrate into DraftEditor page, handle basic conflict resolution.",
+          "testStrategy": "Unit Test: Presence tracking logic. Integration Test: Open same draft in two browser sessions, make edits, verify real-time sync. Integration Test: Verify change history captures edits correctly. Integration Test: User disconnects, verify removal from active editors.",
+          "subtasks": []
+        },
+        {
+          "id": "12",
+          "title": "PR #12: Comments System",
+          "description": "Implement inline comments and threaded replies",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": ["11"],
+          "details": "Files: CommentThread.tsx, CommentItem.tsx, AddCommentButton.tsx, CommentsSidebar.tsx, comment.service.ts, useComments.ts. Design comment data structure in Firestore, create comment service, build AddCommentButton component, build CommentThread component, build CommentsSidebar component, add text highlighting for comments, integrate into DraftEditor page, real-time comment updates.",
+          "testStrategy": "Unit Test: Comment validation. Integration Test: Add comment to draft, verify saved to Firestore. Integration Test: Reply to comment, verify reply appended. Integration Test: Resolve comment, verify status updated. Integration Test: Multiple users commenting simultaneously, verify no conflicts.",
+          "subtasks": []
+        },
+        {
+          "id": "13",
+          "title": "PR #13: DOCX Export",
+          "description": "Generate and download DOCX files from drafts",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["10"],
+          "details": "Files: aws-lambda/exports/src/docx-generator.ts, export.service.ts, ExportButton.tsx, ExportModal.tsx. Install docx npm package in Lambda, create DOCX generation logic, create export handler, create Firebase Function proxy, build export service, build ExportButton component, build ExportModal component, handle export completion.",
+          "testStrategy": "Unit Test: DOCX generation with mock draft data. Unit Test: Verify purgeAt calculation. Integration Test: Generate export from real draft, download DOCX, open in Microsoft Word. Integration Test: Test signed URL expiry.",
+          "subtasks": []
+        },
+        {
+          "id": "14",
+          "title": "PR #14: Data Retention & Purge Job",
+          "description": "Implement 7-day retention policy with automated purge job",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": ["5", "13"],
+          "details": "Files: firebase/functions/src/scheduled/retention.ts, RetentionWarning.tsx. Create retention purge Cloud Function, schedule function in Firebase, add manual purge endpoint, build RetentionWarning component, add retention info to FileCard, add retention info to export list.",
+          "testStrategy": "Unit Test: Query logic for files/exports older than 7 days. Unit Test: Verify purge job correctly calculates purgeAt. Integration Test: Create file with purgeAt in the past, run purge job, verify file deleted. Integration Test: Create file with purgeAt in the future, run purge job, verify file NOT deleted. Integration Test: Test dryRun mode.",
+          "subtasks": []
+        },
+        {
+          "id": "15",
+          "title": "PR #15: Error Handling & Edge Cases",
+          "description": "Comprehensive error handling, loading states, empty states, and edge case handling",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": ["4"],
+          "details": "Files: ErrorBoundary.tsx, LoadingSpinner.tsx, EmptyState.tsx, ErrorMessage.tsx, Toast.tsx, errorHandler.ts. Create ErrorBoundary component, build LoadingSpinner component, build EmptyState component, build ErrorMessage component, build Toast notification system, centralize error handling, add error middleware to Firebase Functions, add API error interceptors, handle edge cases, add loading states to all async operations.",
+          "testStrategy": "Unit Test: Error handler maps error codes correctly. Unit Test: Toast queue handles multiple toasts. Integration Test: Simulate network error, verify offline banner appears. Integration Test: Simulate 401 error, verify token refresh. Integration Test: Upload very large file, verify error message displayed.",
+          "subtasks": []
+        },
+        {
+          "id": "16",
+          "title": "PR #16: UI/UX Polish & Accessibility",
+          "description": "Polish UI, improve UX flows, add accessibility features, and responsive design",
+          "status": "pending",
+          "priority": "medium",
+          "dependencies": ["2", "4", "10"],
+          "details": "Files: globals.css, Button.tsx, Modal.tsx, Dropdown.tsx, Navigation.tsx, Sidebar.tsx, Header.tsx, accessibility.ts. Design system setup, build reusable Button component, build accessible Modal component, build accessible Dropdown component, build Navigation component, build Sidebar component, ensure keyboard navigation, add ARIA labels and roles, check color contrast, responsive design, add focus indicators, add screen reader support.",
+          "testStrategy": "Manual Test: Keyboard navigation through entire app. Manual Test: Screen reader test. Automated Test: Lighthouse accessibility audit (score 90+). Automated Test: axe-core accessibility linting. Manual Test: Color contrast checker on all text elements.",
+          "subtasks": []
+        },
+        {
+          "id": "17",
+          "title": "PR #17: Integration Testing & End-to-End Tests",
+          "description": "Comprehensive integration tests and end-to-end test suite",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["8", "11", "13"],
+          "details": "Files: tests/integration/*.test.ts, tests/e2e/user-journey.spec.ts, tests/setup.ts. Set up testing framework, write auth integration tests, write matter CRUD integration tests, write file upload integration tests, write template CRUD integration tests, write draft generation integration tests, write collaboration integration tests, write export integration tests, write E2E user journey tests, set up CI pipeline to run tests.",
+          "testStrategy": "All integration tests written and passing. E2E tests cover critical user journeys. CI pipeline runs tests automatically.",
+          "subtasks": []
+        },
+        {
+          "id": "18",
+          "title": "PR #18: Documentation & Deployment",
+          "description": "Complete documentation, deployment scripts, and production readiness",
+          "status": "pending",
+          "priority": "high",
+          "dependencies": ["17"],
+          "details": "Files: README.md, docs/*.md, deployment scripts. Write comprehensive README, write setup documentation, write deployment documentation, write API documentation, write architecture documentation, write testing documentation, create deployment scripts, set up production environment, create production deployment workflow, final production checklist.",
+          "testStrategy": "Manual Test: Deploy to staging environment and verify all features work. Manual Test: Run production deployment workflow and verify successful deployment. Manual Test: Load production app and complete full user journey.",
+          "subtasks": []
+        }
+      ],
+      "metadata": {
+        "createdAt": "2025-01-11T00:00:00.000Z",
+        "description": "Main task list for Stenographer project - AI-Driven Demand Letter Generator"
+      }
+    }
+  },
+  "version": "1.0"
+}

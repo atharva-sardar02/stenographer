@@ -1,0 +1,41 @@
+name: Deploy AWS Lambda Functions
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'aws-lambda/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install AWS SAM CLI
+        run: |
+          pip install aws-sam-cli
+
+      - name: Build and deploy Lambda functions
+        run: |
+          # TODO: Implement SAM build and deploy for each Lambda function
+          echo "Lambda deployment - implementation pending"
+          # sam build
+          # sam deploy --no-confirm-changeset --no-fail-on-empty-changeset
+

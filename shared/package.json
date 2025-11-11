@@ -1,0 +1,14 @@
+{
+  "name": "@stenographer/shared-types",
+  "version": "0.1.0",
+  "description": "Shared TypeScript types for Stenographer project",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  }
+}
+

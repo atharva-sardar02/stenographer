@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAttorney() {
+      return isAuthenticated() && getUserRole() == 'attorney';
+    }
+    
+    // Users can read/update their own profile
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+    
+    // Matters: authenticated users can read/write
+    match /matters/{matterId} {
+      allow read, write: if isAuthenticated();
+      
+      // Files subcollection
+      match /files/{fileId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+    
+    // Templates: authenticated users can read, only attorneys can write
+    match /templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if isAttorney();
+    }
+    
+    // Drafts: authenticated users can read/write
+    match /drafts/{draftId} {
+      allow read, write: if isAuthenticated();
+      
+      // Collaboration subcollection
+      match /collaboration {
+        allow read, write: if isAuthenticated();
+      }
+    }
+    
+    // Exports: authenticated users can read/write their own
+    match /exports/{exportId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Jobs: read-only for authenticated users
+    match /jobs/{jobId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only backend can write
+    }
+  }
+}
+
