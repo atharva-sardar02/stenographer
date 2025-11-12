@@ -48,7 +48,7 @@ export const Templates: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <main id="main-content" className="max-w-7xl mx-auto p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -139,7 +139,7 @@ export const Templates: React.FC = () => {
           ))}
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

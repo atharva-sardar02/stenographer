@@ -33,7 +33,8 @@ export const MatterCard: React.FC<MatterCardProps> = ({ matter }) => {
   return (
     <Link
       to={`/matters/${matter.matterId}`}
-      className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6"
+      className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      aria-label={`View matter: ${matter.title}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">

@@ -15,6 +15,9 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <BrowserRouter>
+          <a href="#main-content" className="skip-to-main">
+            Skip to main content
+          </a>
           <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
