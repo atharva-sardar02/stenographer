@@ -114,12 +114,21 @@
 - ✅ Firebase Function proxy endpoint
 - ✅ S3 storage integration (placeholder)
 
+### PR #14: Data Retention & Purge Job
+- ✅ Scheduled retention purge job (daily at midnight)
+- ✅ Manual purge endpoint with dry-run support
+- ✅ RetentionWarning component
+- ✅ File expiration countdown in FileCard
+- ✅ Firestore indexes for purge queries
+- ✅ Automatic purgeAt calculation (7 days from upload)
+
 ## In Progress 🚧
 
-### PR #14: Data Retention & Purge Job (Next)
-- ⏳ Scheduled cleanup jobs
-- ⏳ 7-day auto-purge policy
-- ⏳ Firestore cleanup functions
+### PR #15: Error Handling & Edge Cases (Next)
+- ⏳ Comprehensive error handling
+- ⏳ Loading states
+- ⏳ Empty states
+- ⏳ Edge case handling
 
 ## Pending Features 📋
 
