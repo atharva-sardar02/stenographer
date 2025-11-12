@@ -132,12 +132,22 @@
 - ✅ Consistent loading states across Dashboard, MatterDetail, Templates
 - ✅ Empty states with helpful messages and action buttons
 
+### PR #16: UI/UX Polish & Accessibility
+- ✅ Reusable Button component with variants and sizes
+- ✅ Accessible Modal component with focus trap
+- ✅ Skip-to-main-content link for keyboard navigation
+- ✅ Global focus-visible styles for keyboard navigation
+- ✅ ARIA labels on interactive elements
+- ✅ Semantic HTML landmarks (main content)
+- ✅ Enhanced focus indicators
+- ✅ Improved color contrast (light mode)
+
 ## In Progress 🚧
 
-### PR #16: UI/UX Polish & Accessibility (Next)
-- ⏳ UI polish and improvements
-- ⏳ Accessibility features
-- ⏳ Responsive design enhancements
+### PR #17: Integration Testing & End-to-End Tests (Next)
+- ⏳ Integration test suite
+- ⏳ End-to-end test suite
+- ⏳ Test coverage improvements
 
 ## Pending Features 📋
 
