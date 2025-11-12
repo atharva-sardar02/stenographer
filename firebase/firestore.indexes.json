@@ -9,6 +9,20 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "matters",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdBy",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "status",
           "order": "ASCENDING"
         },
@@ -60,6 +74,20 @@
           },
           {
             "fieldPath": "lastEditedAt",
+            "order": "DESCENDING"
+          }
+        ]
+      },
+      {
+        "collectionGroup": "drafts",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "matterId",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "createdAt",
             "order": "DESCENDING"
           }
         ]
