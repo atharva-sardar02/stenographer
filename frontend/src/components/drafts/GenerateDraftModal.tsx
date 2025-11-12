@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TemplateService, Template } from '../../services/template.service';
 import { FileService, FileDocument } from '../../services/file.service';
 import { DraftService, GenerateDraftData } from '../../services/draft.service';
@@ -18,12 +19,14 @@ export const GenerateDraftModal: React.FC<GenerateDraftModalProps> = ({
   onSuccess,
   matterId,
 }) => {
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [files, setFiles] = useState<FileDocument[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [variableValues, setVariableValues] = useState<Record<string, any>>({});
   const [generating, setGenerating] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [currentSection, setCurrentSection] = useState<
     'facts' | 'liability' | 'damages' | 'demand' | null
   >(null);
@@ -41,10 +44,17 @@ export const GenerateDraftModal: React.FC<GenerateDraftModalProps> = ({
 
   const loadTemplates = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const data = await TemplateService.getTemplates({ activeOnly: true });
       setTemplates(data);
+      if (data.length === 0) {
+        setError('No active templates found. Please create a template first.');
+      }
     } catch (err: any) {
       setError(`Failed to load templates: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -166,21 +176,48 @@ export const GenerateDraftModal: React.FC<GenerateDraftModalProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Template *
                 </label>
-                <select
-                  value={selectedTemplateId}
-                  onChange={(e) => {
-                    setSelectedTemplateId(e.target.value);
-                    setVariableValues({});
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Choose a template...</option>
-                  {templates.map((template) => (
-                    <option key={template.templateId} value={template.templateId}>
-                      {template.name}
+                {loading ? (
+                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                    <span className="text-sm text-gray-500">Loading templates...</span>
+                  </div>
+                ) : (
+                  <select
+                    value={selectedTemplateId}
+                    onChange={(e) => {
+                      setSelectedTemplateId(e.target.value);
+                      setVariableValues({});
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={templates.length === 0}
+                  >
+                    <option value="">
+                      {templates.length === 0
+                        ? 'No templates available - Create one first'
+                        : 'Choose a template...'}
                     </option>
-                  ))}
-                </select>
+                    {templates.map((template) => (
+                      <option key={template.templateId} value={template.templateId}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {templates.length === 0 && !loading && (
+                  <p className="mt-2 text-sm text-gray-500">
+                    Go to{' '}
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-700 underline"
+                      onClick={() => {
+                        onClose();
+                        navigate('/templates');
+                      }}
+                    >
+                      Templates
+                    </button>{' '}
+                    to create your first template.
+                  </p>
+                )}
               </div>
 
               {/* Source Files Selection */}
