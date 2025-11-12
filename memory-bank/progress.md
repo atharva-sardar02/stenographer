@@ -106,13 +106,20 @@
 - ✅ Threaded replies
 - ✅ Resolve/unresolve functionality
 
+### PR #13: DOCX Export
+- ✅ DOCX generation Lambda function
+- ✅ generateDocx function with professional formatting
+- ✅ ExportService in frontend
+- ✅ Export button in DraftEditor
+- ✅ Firebase Function proxy endpoint
+- ✅ S3 storage integration (placeholder)
+
 ## In Progress 🚧
 
-### PR #13: DOCX Export (Next)
-- ⏳ DOCX generation Lambda
-- ⏳ Template variable replacement
-- ⏳ Professional formatting
-- ⏳ Download functionality
+### PR #14: Data Retention & Purge Job (Next)
+- ⏳ Scheduled cleanup jobs
+- ⏳ 7-day auto-purge policy
+- ⏳ Firestore cleanup functions
 
 ## Pending Features 📋
 
