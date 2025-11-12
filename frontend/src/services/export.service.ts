@@ -28,20 +28,22 @@ export class ExportService {
         throw new Error('User not authenticated');
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/v1/exports:generate`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${await user.getIdToken()}`,
-          },
-          body: JSON.stringify({
-            ...data,
-            userId: user.uid,
-          }),
-        }
-      );
+      // Call Firebase Function directly by name
+      const functionUrl = import.meta.env.VITE_API_BASE_URL 
+        ? `${import.meta.env.VITE_API_BASE_URL}/exportGenerate`
+        : 'https://us-central1-stenographer-dev.cloudfunctions.net/exportGenerate';
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify({
+          ...data,
+          userId: user.uid,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();

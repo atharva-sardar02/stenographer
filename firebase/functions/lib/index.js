@@ -32,15 +32,24 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.manualPurge = exports.retentionPurge = exports.updateUserProfile = exports.onFileCreate = exports.onUserCreate = exports.exportGenerate = exports.draftRefineSection = exports.draftGenerate = exports.ocrExtract = exports.api = void 0;
 const functions = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
+const cors_1 = __importDefault(require("cors"));
 const retention_1 = require("./scheduled/retention");
 Object.defineProperty(exports, "retentionPurge", { enumerable: true, get: function () { return retention_1.retentionPurge; } });
 Object.defineProperty(exports, "manualPurge", { enumerable: true, get: function () { return retention_1.manualPurge; } });
 // Initialize Firebase Admin
 admin.initializeApp();
+// CORS configuration
+const corsHandler = (0, cors_1.default)({
+    origin: true, // Allow all origins (or specify your domain)
+    credentials: true,
+});
 // Export API proxy function
 exports.api = functions
     .region('us-central1')
@@ -190,48 +199,43 @@ exports.draftRefineSection = functions
 });
 /**
  * Export generation proxy endpoint
- * POST /api/v1/exports:generate
+ * POST /exportGenerate
  * Proxies export generation requests to AWS Lambda
  */
 exports.exportGenerate = functions
     .region('us-central1')
     .https
-    .onRequest(async (request, response) => {
-    // CORS handling
-    response.set('Access-Control-Allow-Origin', '*');
-    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    if (request.method === 'OPTIONS') {
-        response.status(204).send('');
-        return;
-    }
-    if (request.method !== 'POST') {
-        response.status(405).json({ error: 'Method not allowed' });
-        return;
-    }
-    try {
-        // TODO: Verify Firebase ID token
-        // const authHeader = request.headers.authorization;
-        // if (!authHeader) {
-        //   response.status(401).json({ error: 'Unauthorized' });
-        //   return;
-        // }
-        // TODO: Forward request to AWS Lambda export generation function
-        // For now, return a placeholder response
-        response.status(200).json({
-            message: 'Export generation endpoint - AWS Lambda integration pending',
-            note: 'This will forward to AWS Lambda export generation function when configured',
-            downloadUrl: 'https://example.com/placeholder.docx',
-            exportId: `export-${Date.now()}`,
-        });
-    }
-    catch (error) {
-        console.error('Export generation proxy error:', error);
-        response.status(500).json({
-            error: 'Internal server error',
-            message: error.message,
-        });
-    }
+    .onRequest((request, response) => {
+    // Handle CORS preflight
+    corsHandler(request, response, async () => {
+        if (request.method !== 'POST') {
+            response.status(405).json({ error: 'Method not allowed' });
+            return;
+        }
+        try {
+            // TODO: Verify Firebase ID token
+            // const authHeader = request.headers.authorization;
+            // if (!authHeader) {
+            //   response.status(401).json({ error: 'Unauthorized' });
+            //   return;
+            // }
+            // TODO: Forward request to AWS Lambda export generation function
+            // For now, return a placeholder response
+            response.status(200).json({
+                message: 'Export generation endpoint - AWS Lambda integration pending',
+                note: 'This will forward to AWS Lambda export generation function when configured',
+                downloadUrl: 'https://example.com/placeholder.docx',
+                exportId: `export-${Date.now()}`,
+            });
+        }
+        catch (error) {
+            console.error('Export generation proxy error:', error);
+            response.status(500).json({
+                error: 'Internal server error',
+                message: error.message,
+            });
+        }
+    });
 });
 /**
  * User creation trigger

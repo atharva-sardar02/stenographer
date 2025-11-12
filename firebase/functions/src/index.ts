@@ -1,9 +1,16 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
+import cors from 'cors';
 import { retentionPurge, manualPurge } from './scheduled/retention';
 
 // Initialize Firebase Admin
 admin.initializeApp();
+
+// CORS configuration
+const corsHandler = cors({
+  origin: true, // Allow all origins (or specify your domain)
+  credentials: true,
+});
 
 // Export API proxy function
 export const api = functions
@@ -170,51 +177,44 @@ export const draftRefineSection = functions
 
 /**
  * Export generation proxy endpoint
- * POST /api/v1/exports:generate
+ * POST /exportGenerate
  * Proxies export generation requests to AWS Lambda
  */
 export const exportGenerate = functions
   .region('us-central1')
   .https
-  .onRequest(async (request: functions.Request, response: functions.Response) => {
-    // CORS handling
-    response.set('Access-Control-Allow-Origin', '*');
-    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  .onRequest((request: functions.Request, response: functions.Response) => {
+    // Handle CORS preflight
+    corsHandler(request, response, async () => {
+      if (request.method !== 'POST') {
+        response.status(405).json({ error: 'Method not allowed' });
+        return;
+      }
 
-    if (request.method === 'OPTIONS') {
-      response.status(204).send('');
-      return;
-    }
+      try {
+        // TODO: Verify Firebase ID token
+        // const authHeader = request.headers.authorization;
+        // if (!authHeader) {
+        //   response.status(401).json({ error: 'Unauthorized' });
+        //   return;
+        // }
 
-    if (request.method !== 'POST') {
-      response.status(405).json({ error: 'Method not allowed' });
-      return;
-    }
-
-    try {
-      // TODO: Verify Firebase ID token
-      // const authHeader = request.headers.authorization;
-      // if (!authHeader) {
-      //   response.status(401).json({ error: 'Unauthorized' });
-      //   return;
-      // }
-
-      // TODO: Forward request to AWS Lambda export generation function
-      // For now, return a placeholder response
-      response.status(200).json({
-        message: 'Export generation endpoint - AWS Lambda integration pending',
-        note: 'This will forward to AWS Lambda export generation function when configured',
-        downloadUrl: 'https://example.com/placeholder.docx',
-        exportId: `export-${Date.now()}`,
-      });
-    } catch (error: any) {
-      console.error('Export generation proxy error:', error);
-      response.status(500).json({
-        error: 'Internal server error',
-        message: error.message,
-      });
-    }
+        // TODO: Forward request to AWS Lambda export generation function
+        // For now, return a placeholder response
+        response.status(200).json({
+          message: 'Export generation endpoint - AWS Lambda integration pending',
+          note: 'This will forward to AWS Lambda export generation function when configured',
+          downloadUrl: 'https://example.com/placeholder.docx',
+          exportId: `export-${Date.now()}`,
+        });
+      } catch (error: any) {
+        console.error('Export generation proxy error:', error);
+        response.status(500).json({
+          error: 'Internal server error',
+          message: error.message,
+        });
+      }
+    });
   });
 
 /**
