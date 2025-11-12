@@ -41,15 +41,15 @@ service cloud.firestore {
       allow write: if isAttorney();
     }
     
-    // Drafts: authenticated users can read/write
-    match /drafts/{draftId} {
-      allow read, write: if isAuthenticated();
-      
-      // Collaboration subcollection
-      match /collaboration {
+      // Drafts: authenticated users can read/write
+      match /drafts/{draftId} {
         allow read, write: if isAuthenticated();
+
+        // Collaboration subcollection
+        match /collaboration/{collaborationId} {
+          allow read, write: if isAuthenticated();
+        }
       }
-    }
     
     // Exports: authenticated users can read/write their own
     match /exports/{exportId} {

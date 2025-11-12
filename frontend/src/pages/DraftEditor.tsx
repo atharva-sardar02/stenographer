@@ -5,10 +5,14 @@ import { MatterService, Matter } from '../services/matter.service';
 import { RefineSectionModal } from '../components/drafts/RefineSectionModal';
 import { TipTapEditor } from '../components/editor/TipTapEditor';
 import { useEditor } from '../hooks/useEditor';
+import { CollaborationProvider, useCollaboration } from '../contexts/CollaborationContext';
+import { PresenceIndicator } from '../components/collaboration/PresenceIndicator';
+import { ChangeHistory } from '../components/collaboration/ChangeHistory';
+import { useAuth } from '../hooks/useAuth';
 
-export const DraftEditor: React.FC = () => {
-  const { draftId } = useParams<{ draftId: string }>();
-  const navigate = useNavigate();
+const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
+  const { user, userProfile } = useAuth();
+  const { recordChange } = useCollaboration();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [matter, setMatter] = useState<Matter | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,19 +43,14 @@ export const DraftEditor: React.FC = () => {
   });
 
   useEffect(() => {
-    if (!draftId) {
-      navigate('/dashboard');
-      return;
-    }
-
     loadDraft();
-  }, [draftId, navigate]);
+  }, [draftId]);
 
   const loadDraft = async () => {
     try {
       setLoading(true);
       setError(null);
-      const draftData = await DraftService.getDraft(draftId!);
+      const draftData = await DraftService.getDraft(draftId);
       if (!draftData) {
         setError('Draft not found');
         return;
@@ -89,6 +88,16 @@ export const DraftEditor: React.FC = () => {
     setRefiningSection(section);
     try {
       await DraftService.refineSection(draftId, section, instruction, keepExistingContent);
+      
+      // Record refinement change
+      await recordChange({
+        userId: user?.uid || '',
+        userName: userProfile?.displayName || user?.email || 'Unknown',
+        type: 'refinement',
+        section,
+        description: `Refined ${section} section: ${instruction}`,
+      });
+
       await loadDraft(); // Reload draft to get updated content
     } finally {
       setRefiningSection(null);
@@ -109,6 +118,20 @@ export const DraftEditor: React.FC = () => {
         : demandEditor;
 
     editorHook.saveContent(content, section);
+
+    // Record change in collaboration history (debounced)
+    const changeTimeout = setTimeout(async () => {
+      await recordChange({
+        userId: user?.uid || '',
+        userName: userProfile?.displayName || user?.email || 'Unknown',
+        type: 'insert',
+        section,
+        description: `Edited ${section} section`,
+        content: content.substring(0, 200), // Store first 200 chars
+      });
+    }, 3000); // Record change 3 seconds after last edit
+
+    return () => clearTimeout(changeTimeout);
   };
 
   const getCurrentEditor = () => {
@@ -190,6 +213,7 @@ export const DraftEditor: React.FC = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <PresenceIndicator />
               <span className="text-sm text-gray-500">
                 {getCurrentEditor().getSaveStatus()}
               </span>
@@ -281,13 +305,10 @@ export const DraftEditor: React.FC = () => {
             })}
           </div>
 
-          {/* Right Sidebar - Placeholder for comments (PR #11) */}
+          {/* Right Sidebar - Change History */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow p-4 sticky top-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Comments</h3>
-              <p className="text-xs text-gray-500">
-                Comments and collaboration features will be available in PR #11.
-              </p>
+              <ChangeHistory />
             </div>
           </div>
         </div>
@@ -304,3 +325,24 @@ export const DraftEditor: React.FC = () => {
   );
 };
 
+export const DraftEditor: React.FC = () => {
+  const { draftId } = useParams<{ draftId: string }>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!draftId) {
+      navigate('/dashboard');
+      return;
+    }
+  }, [draftId, navigate]);
+
+  if (!draftId) {
+    return null;
+  }
+
+  return (
+    <CollaborationProvider draftId={draftId}>
+      <DraftEditorContent draftId={draftId} />
+    </CollaborationProvider>
+  );
+};
