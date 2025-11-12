@@ -64,15 +64,46 @@
 - ✅ TemplatePreview component
 - ✅ Role-based access (attorneys only for write)
 
+### PR #8: AI Draft Generation (OpenAI)
+- ✅ AWS Lambda for draft generation
+- ✅ OpenAI API integration
+- ✅ Prompt templates
+- ✅ Draft service
+- ✅ Generation UI with progress tracking
+- ✅ Variable input form
+- ✅ Draft listing and editing
+
+### PR #9: Draft Refinement (Section Regeneration)
+- ✅ Section refinement modal
+- ✅ AWS Lambda refinement handler
+- ✅ OpenAI refinement prompts
+- ✅ Integration with DraftEditor
+
+### PR #10: Rich Text Editor Integration (TipTap)
+- ✅ TipTap editor component
+- ✅ Editor toolbar with formatting tools
+- ✅ Auto-save functionality (debounced)
+- ✅ Section-based editing
+- ✅ Professional legal document styling
+
+### PR #11: Real-Time Collaboration & Change Tracking
+- ✅ CollaborationContext for managing active editors
+- ✅ Presence tracking (updates every 10 seconds)
+- ✅ Change history tracking (last 100 changes)
+- ✅ PresenceIndicator component
+- ✅ ChangeHistory component
+- ✅ ChangeItem component
+- ✅ Real-time Firestore listeners
+- ✅ Automatic cleanup of inactive editors
+
 ## In Progress 🚧
 
-### PR #8: AI Draft Generation (Next)
-- ⏳ AWS Lambda for draft generation
-- ⏳ OpenAI API integration
-- ⏳ Prompt templates
-- ⏳ Draft service
-- ⏳ Generation UI
-- ⏳ Variable input form
+### PR #12: Comments System (Next)
+- ⏳ Comment data structure
+- ⏳ Comment service
+- ⏳ Comment components
+- ⏳ Text highlighting
+- ⏳ Real-time updates
 
 ## Pending Features 📋
 
