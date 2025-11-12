@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   getDoc,
   updateDoc,
+  Timestamp,
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../config/firebase';
@@ -98,7 +99,7 @@ export class FileService {
                 ocrConfidence: null,
                 ocrPages: null,
                 ocrError: null,
-                purgeAt: purgeAt.toISOString(),
+                purgeAt: Timestamp.fromDate(purgeAt),
                 isPurged: false,
               };
 
@@ -131,6 +132,19 @@ export class FileService {
       const files: FileDocument[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        // Handle purgeAt - could be Timestamp or string (for backward compatibility)
+        let purgeAtDate: Date;
+        if (data.purgeAt?.toDate) {
+          // It's a Firestore Timestamp
+          purgeAtDate = data.purgeAt.toDate();
+        } else if (typeof data.purgeAt === 'string') {
+          // It's an ISO string (old format)
+          purgeAtDate = new Date(data.purgeAt);
+        } else {
+          // Fallback
+          purgeAtDate = new Date();
+        }
+
         files.push({
           fileId: doc.id,
           matterId: data.matterId,
@@ -145,7 +159,7 @@ export class FileService {
           ocrConfidence: data.ocrConfidence || null,
           ocrPages: data.ocrPages || null,
           ocrError: data.ocrError || null,
-          purgeAt: data.purgeAt?.toDate() || new Date(),
+          purgeAt: purgeAtDate,
           isPurged: data.isPurged || false,
         });
       });
@@ -169,6 +183,19 @@ export class FileService {
       }
 
       const data = fileSnap.data();
+      // Handle purgeAt - could be Timestamp or string (for backward compatibility)
+      let purgeAtDate: Date;
+      if (data.purgeAt?.toDate) {
+        // It's a Firestore Timestamp
+        purgeAtDate = data.purgeAt.toDate();
+      } else if (typeof data.purgeAt === 'string') {
+        // It's an ISO string (old format)
+        purgeAtDate = new Date(data.purgeAt);
+      } else {
+        // Fallback
+        purgeAtDate = new Date();
+      }
+
       return {
         fileId: fileSnap.id,
         matterId: data.matterId,
@@ -183,7 +210,7 @@ export class FileService {
         ocrConfidence: data.ocrConfidence || null,
         ocrPages: data.ocrPages || null,
         ocrError: data.ocrError || null,
-        purgeAt: data.purgeAt?.toDate() || new Date(),
+        purgeAt: purgeAtDate,
         isPurged: data.isPurged || false,
       };
     } catch (error: any) {
