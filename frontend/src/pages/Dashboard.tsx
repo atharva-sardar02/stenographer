@@ -3,6 +3,8 @@ import { useAuth } from '../hooks/useAuth';
 import { MatterService, Matter } from '../services/matter.service';
 import { MatterCard } from '../components/matters/MatterCard';
 import { CreateMatterModal } from '../components/matters/CreateMatterModal';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { EmptyState } from '../components/common/EmptyState';
 
 export const Dashboard: React.FC = () => {
   const { user, userProfile, signOut } = useAuth();
@@ -163,23 +165,26 @@ export const Dashboard: React.FC = () => {
         {/* Matters List */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading matters...</p>
+            <LoadingSpinner size="lg" text="Loading matters..." />
           </div>
         ) : filteredMatters.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-600 mb-4">
-              {searchQuery || statusFilter !== 'all'
-                ? 'No matters found matching your criteria.'
-                : "You don't have any matters yet."}
-            </p>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
-            >
-              Create Your First Matter
-            </button>
-          </div>
+          <EmptyState
+            icon="📁"
+            title={
+              searchQuery || statusFilter !== 'all'
+                ? 'No matters found'
+                : "You don't have any matters yet"
+            }
+            description={
+              searchQuery || statusFilter !== 'all'
+                ? 'Try adjusting your search or filter criteria.'
+                : 'Create your first matter to get started with managing your legal cases.'
+            }
+            action={{
+              label: 'Create Matter',
+              onClick: () => setIsCreateModalOpen(true),
+            }}
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMatters.map((matter) => (

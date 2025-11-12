@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { TemplateService, Template } from '../services/template.service';
 import { TemplateCard } from '../components/templates/TemplateCard';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
+import { EmptyState } from '../components/common/EmptyState';
 import { useAuth } from '../hooks/useAuth';
 
 export const Templates: React.FC = () => {
   const { userProfile } = useAuth();
+  const navigate = useNavigate();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,23 +102,29 @@ export const Templates: React.FC = () => {
       {/* Loading State */}
       {loading && (
         <div className="text-center py-12">
-          <p className="text-gray-500">Loading templates...</p>
+          <LoadingSpinner size="lg" text="Loading templates..." />
         </div>
       )}
 
       {/* Templates List */}
       {!loading && templates.length === 0 && (
-        <div className="text-center py-12 bg-white border border-gray-200 rounded-lg">
-          <p className="text-gray-500 mb-4">No templates found</p>
-          {isAttorney && (
-            <Link
-              to="/templates/new"
-              className="text-blue-600 hover:text-blue-700"
-            >
-              Create your first template
-            </Link>
-          )}
-        </div>
+        <EmptyState
+          icon="📋"
+          title="No templates found"
+          description={
+            searchQuery || !activeOnly
+              ? 'Try adjusting your search or filter criteria.'
+              : 'Create your first template to get started with draft generation.'
+          }
+          action={
+            !searchQuery && activeOnly && isAttorney
+              ? {
+                  label: 'Create Template',
+                  onClick: () => navigate('/templates/new'),
+                }
+              : undefined
+          }
+        />
       )}
 
       {!loading && templates.length > 0 && (

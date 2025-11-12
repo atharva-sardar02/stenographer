@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { MatterService, Matter } from '../services/matter.service';
 import { MatterTabs } from '../components/matters/MatterTabs';
+import { LoadingSpinner } from '../components/common/LoadingSpinner';
 
 export const MatterDetail: React.FC = () => {
   const { matterId } = useParams<{ matterId: string }>();
@@ -20,34 +21,34 @@ export const MatterDetail: React.FC = () => {
     status: 'active',
   });
 
-  useEffect(() => {
+  const loadMatter = async () => {
     if (!matterId) {
       navigate('/dashboard');
       return;
     }
 
-    const loadMatter = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const matterData = await MatterService.getMatter(matterId);
-        if (!matterData) {
-          setError('Matter not found');
-          return;
-        }
-        setMatter(matterData);
-        setEditData({
-          title: matterData.title,
-          clientName: matterData.clientName,
-          status: matterData.status,
-        });
-      } catch (err: any) {
-        setError(err.message || 'Failed to load matter');
-      } finally {
-        setLoading(false);
+    try {
+      setLoading(true);
+      setError(null);
+      const matterData = await MatterService.getMatter(matterId);
+      if (!matterData) {
+        setError('Matter not found');
+        return;
       }
-    };
+      setMatter(matterData);
+      setEditData({
+        title: matterData.title,
+        clientName: matterData.clientName,
+        status: matterData.status,
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to load matter');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadMatter();
   }, [matterId, navigate]);
 
@@ -92,9 +93,37 @@ export const MatterDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Loading matter...</p>
+        <LoadingSpinner size="lg" text="Loading matter..." />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+          <div className="text-center">
+            <div className="text-red-600 text-4xl mb-4">⚠️</div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Matter</h2>
+            <p className="text-sm text-gray-600 mb-4">{error}</p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={() => {
+                  setError(null);
+                  loadMatter();
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Try Again
+              </button>
+              <Link
+                to="/dashboard"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     );
