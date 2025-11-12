@@ -9,7 +9,6 @@ import { EmptyState } from '../components/common/EmptyState';
 export const Dashboard: React.FC = () => {
   const { user, userProfile, signOut } = useAuth();
   const [matters, setMatters] = useState<Matter[]>([]);
-  const [filteredMatters, setFilteredMatters] = useState<Matter[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<
@@ -19,6 +18,16 @@ export const Dashboard: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
   const userId = user?.uid || '';
+
+  // Filter matters based on search query (status is handled by the query)
+  const filteredMatters = matters.filter((matter) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      matter.title.toLowerCase().includes(query) ||
+      matter.clientName.toLowerCase().includes(query)
+    );
+  });
 
   useEffect(() => {
     if (!userId) return;
@@ -34,7 +43,6 @@ export const Dashboard: React.FC = () => {
           searchQuery: searchQuery || undefined,
         });
         setMatters(mattersData);
-        setFilteredMatters(mattersData);
       } catch (err: any) {
         setError(err.message || 'Failed to load matters');
       } finally {
@@ -53,17 +61,23 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handleCreateSuccess = () => {
+  const handleCreateSuccess = async () => {
     // Reload matters after creation
     if (userId) {
-      const status = statusFilter === 'all' ? undefined : statusFilter;
-      MatterService.getMatters(userId, {
-        status,
-        searchQuery: searchQuery || undefined,
-      })
-        .then(setMatters)
-        .then(() => setFilteredMatters(matters))
-        .catch((err) => setError(err.message));
+      try {
+        setLoading(true);
+        setError(null);
+        const status = statusFilter === 'all' ? undefined : statusFilter;
+        const mattersData = await MatterService.getMatters(userId, {
+          status,
+          searchQuery: searchQuery || undefined,
+        });
+        setMatters(mattersData);
+      } catch (err: any) {
+        setError(err.message || 'Failed to reload matters');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
