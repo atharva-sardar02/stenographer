@@ -1,131 +1,285 @@
-# Stenographer - Demand Letter Generator
+# Stenographer - AI-Powered Demand Letter Generator
 
-> AI-driven solution for automating demand letter creation in law firms
+A comprehensive legal document generation platform that uses AI to create professional demand letters from uploaded documents and templates.
 
-## Overview
+## 🚀 Features
 
-Stenographer is an AI-powered demand letter generator designed to streamline the creation of demand letters for law firms. By leveraging AI to automate the drafting of these documents, this tool significantly reduces the time attorneys spend on this task—from hours to minutes.
-
-## Features
-
-- **AI-Powered Draft Generation**: Generate structured demand letters from source materials using OpenAI
-- **Template Management**: Create and manage firm-specific templates with customizable sections
-- **Real-Time Collaboration**: Basic real-time editing with change tracking
+- **AI-Powered Draft Generation**: Automatically generate demand letters using OpenAI GPT models
 - **OCR Processing**: Extract text from scanned PDFs using AWS Textract
-- **File Management**: Upload and organize case documents (PDF, DOCX, TXT)
-- **DOCX Export**: Export final letters to Microsoft Word format
-- **7-Day Retention**: Automated data retention policy
+- **Template Management**: Create and manage reusable demand letter templates
+- **Real-Time Collaboration**: Multiple users can edit drafts simultaneously with presence indicators
+- **Comments System**: Add threaded comments and replies to drafts
+- **Rich Text Editing**: Professional WYSIWYG editor with formatting tools
+- **DOCX Export**: Export completed drafts as Microsoft Word documents
+- **Data Retention**: Automatic 7-day purge policy for uploaded files and exports
+- **Role-Based Access**: Attorney and paralegal roles with appropriate permissions
 
-## Tech Stack
+## 📋 Table of Contents
 
-- **Frontend**: React 18+ with Vite, TypeScript, TailwindCSS
-- **Backend**: Firebase Cloud Functions (proxy) + AWS Lambda
-- **Database**: Firestore (Native mode)
-- **Storage**: Firebase Storage
-- **Auth**: Firebase Authentication (Email/Password + Google OAuth)
-- **AI**: OpenAI API (GPT-4)
-- **OCR**: AWS Textract
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Development](#development)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Architecture](#architecture)
+- [API Documentation](#api-documentation)
+- [Contributing](#contributing)
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```
 stenographer/
-├── frontend/          # React SPA
-├── firebase/          # Firebase Functions & config
-├── aws-lambda/        # AWS Lambda functions
-├── shared/            # Shared TypeScript types
-└── docs/              # Documentation
+├── frontend/              # React + Vite frontend
+│   ├── src/
+│   │   ├── components/   # React components
+│   │   ├── pages/        # Page components
+│   │   ├── services/     # API service layer
+│   │   ├── contexts/     # React contexts
+│   │   ├── hooks/        # Custom React hooks
+│   │   └── utils/        # Utility functions
+│   └── tests/            # Test files
+├── firebase/              # Firebase Functions and config
+│   ├── functions/        # Cloud Functions
+│   ├── firestore.rules   # Firestore security rules
+│   └── storage.rules     # Storage security rules
+├── aws-lambda/            # AWS Lambda functions
+│   ├── ocr/              # OCR processing
+│   ├── drafts/           # Draft generation
+│   └── exports/          # DOCX export
+├── shared/                # Shared TypeScript types
+└── docs/                  # Documentation
 ```
 
-## Quick Start
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
-- Firebase CLI
+- Node.js 18+ and npm
+- Firebase CLI (`npm install -g firebase-tools`)
 - AWS CLI (for Lambda deployment)
-- Firebase account
-- AWS account
+- Git
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/your-org/stenographer.git
    cd stenographer
    ```
 
-2. **Install frontend dependencies**
+2. **Install dependencies**
    ```bash
+   # Frontend
    cd frontend
    npm install
-   ```
 
-3. **Install Firebase Functions dependencies**
-   ```bash
+   # Firebase Functions
    cd ../firebase/functions
+   npm install
+
+   # AWS Lambda functions
+   cd ../../aws-lambda/ocr
+   npm install
+   cd ../drafts
+   npm install
+   cd ../exports
    npm install
    ```
 
-4. **Set up environment variables**
-   ```bash
-   # Copy example env file
-   cp frontend/.env.example frontend/.env
-   # Edit frontend/.env with your Firebase config
+3. **Set up environment variables**
+
+   Create `.env` files in the following locations:
+
+   **Frontend** (`frontend/.env`):
+   ```env
+   VITE_FIREBASE_API_KEY=your_api_key
+   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   VITE_FIREBASE_APP_ID=your_app_id
+   VITE_API_BASE_URL=https://us-central1-your-project.cloudfunctions.net
    ```
 
-5. **Run development server**
+   **Firebase Functions** (`firebase/functions/.env`):
+   ```env
+   OPENAI_API_KEY=your_openai_key
+   AWS_ACCESS_KEY_ID=your_aws_key
+   AWS_SECRET_ACCESS_KEY=your_aws_secret
+   ```
+
+4. **Initialize Firebase**
+   ```bash
+   cd firebase
+   firebase login
+   firebase use your-project-id
+   firebase deploy --only firestore:rules,storage:rules
+   ```
+
+5. **Start development server**
    ```bash
    cd frontend
    npm run dev
    ```
 
-For detailed setup instructions, see [docs/setup.md](docs/setup.md).
+## 🧪 Testing
 
-## Development
-
-### Frontend Development
-
+### Unit Tests
 ```bash
 cd frontend
-npm run dev      # Start dev server
-npm run build    # Build for production
-npm run test     # Run tests
+npm run test:unit
 ```
+
+### Integration Tests
+```bash
+cd frontend
+npm run test:integration
+```
+
+### E2E Tests
+```bash
+cd frontend
+npm run test:e2e
+```
+
+### Test Coverage
+```bash
+cd frontend
+npm run test:coverage
+```
+
+## 🚢 Deployment
+
+### Frontend (Firebase Hosting)
+
+1. **Build the frontend**
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Deploy to Firebase Hosting**
+   ```bash
+   cd firebase
+   firebase deploy --only hosting
+   ```
 
 ### Firebase Functions
 
 ```bash
-cd firebase/functions
-npm run build    # Compile TypeScript
-npm run serve    # Start emulator
-npm run deploy   # Deploy to Firebase
+cd firebase
+firebase deploy --only functions
 ```
 
-## Deployment
+### AWS Lambda Functions
 
-See [docs/deployment.md](docs/deployment.md) for detailed deployment instructions.
+See [docs/deployment.md](docs/deployment.md) for detailed AWS deployment instructions.
 
-## Documentation
+## 🏛️ Architecture
 
-- [Setup Guide](docs/setup.md) - Development environment setup
-- [Deployment Guide](docs/deployment.md) - Production deployment
-- [PRD](prd_stenographer.md) - Product Requirements Document
-- [Task List](TASK_LIST.md) - Development task breakdown
+### Frontend
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: TailwindCSS
+- **State Management**: Zustand + React Context
+- **Routing**: React Router v6
+- **Data Fetching**: TanStack Query
+- **Rich Text Editor**: TipTap
 
-## Contributing
+### Backend
+- **Firebase Functions**: API proxy and serverless functions
+- **AWS Lambda**: OCR processing, draft generation, DOCX export
+- **Firestore**: NoSQL database for all application data
+- **Firebase Storage**: File storage for uploaded documents
+- **Firebase Auth**: User authentication
 
-1. Create a feature branch: `git checkout -b feature/pr-XX-description`
-2. Make your changes
-3. Run tests: `npm test`
-4. Commit: `git commit -m "feat: PR#XX - Description"`
-5. Push and create a Pull Request
+### AI Services
+- **OpenAI GPT-4**: Draft generation and refinement
+- **AWS Textract**: OCR for scanned PDFs
 
-## License
+## 📚 API Documentation
 
-[Your License Here]
+### Firebase Functions
 
-## Support
+#### `api` - Main API Proxy
+- **Endpoint**: `POST /api/v1/*`
+- **Description**: Proxies requests to AWS Lambda functions
+- **Authentication**: Firebase ID token required
 
-For issues and questions, please open an issue in the repository.
+#### `exportGenerate` - Export Generation
+- **Endpoint**: `POST /api/v1/exports:generate`
+- **Description**: Generates DOCX export from draft
+- **Request Body**:
+  ```json
+  {
+    "draftId": "string",
+    "matterId": "string",
+    "content": {
+      "facts": "string",
+      "liability": "string",
+      "damages": "string",
+      "demand": "string"
+    },
+    "options": {
+      "matterTitle": "string",
+      "clientName": "string"
+    }
+  }
+  ```
 
+#### `retentionPurge` - Scheduled Retention Job
+- **Schedule**: Daily at midnight (America/New_York)
+- **Description**: Automatically purges files and exports older than 7 days
+
+### AWS Lambda Functions
+
+#### OCR Processing (`aws-lambda/ocr`)
+- **Trigger**: Firebase Function proxy
+- **Input**: PDF file from Firebase Storage
+- **Output**: Extracted text with confidence scores
+
+#### Draft Generation (`aws-lambda/drafts`)
+- **Trigger**: Firebase Function proxy
+- **Input**: Template, files, variable values
+- **Output**: Generated draft with all sections
+
+#### DOCX Export (`aws-lambda/exports`)
+- **Trigger**: Firebase Function proxy
+- **Input**: Draft content
+- **Output**: DOCX file in Firebase Storage
+
+## 🔐 Security
+
+- **Authentication**: Firebase Auth (Email/Password + Google OAuth)
+- **Authorization**: Role-based access control (Attorney/Paralegal)
+- **Firestore Rules**: Enforced at database level
+- **Storage Rules**: Enforced at storage level
+- **API Security**: Firebase ID token validation
+
+## 📖 Documentation
+
+- [Product Requirements Document](prd_stenographer.md)
+- [Data Model](docs/data-model.md)
+- [Deployment Guide](docs/deployment.md)
+- [API Reference](docs/api-reference.md)
+- [Development Guide](docs/development.md)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is proprietary and confidential.
+
+## 🆘 Support
+
+For issues and questions, please open an issue on GitHub or contact the development team.
+
+---
+
+**Built with ❤️ for legal professionals**
