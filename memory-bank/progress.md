@@ -96,14 +96,23 @@
 - ✅ Real-time Firestore listeners
 - ✅ Automatic cleanup of inactive editors
 
+### PR #12: Comments System
+- ✅ Comment data structure in Firestore
+- ✅ CommentService with full CRUD operations
+- ✅ CommentItem component
+- ✅ CommentsSidebar component with filtering
+- ✅ AddCommentButton component
+- ✅ Real-time comment updates
+- ✅ Threaded replies
+- ✅ Resolve/unresolve functionality
+
 ## In Progress 🚧
 
-### PR #12: Comments System (Next)
-- ⏳ Comment data structure
-- ⏳ Comment service
-- ⏳ Comment components
-- ⏳ Text highlighting
-- ⏳ Real-time updates
+### PR #13: DOCX Export (Next)
+- ⏳ DOCX generation Lambda
+- ⏳ Template variable replacement
+- ⏳ Professional formatting
+- ⏳ Download functionality
 
 ## Pending Features 📋
 
