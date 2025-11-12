@@ -186,6 +186,15 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
         },
       });
 
+      // Check if this is a placeholder response (AWS Lambda not yet integrated)
+      if (result.downloadUrl.includes('example.com') || result.downloadUrl.includes('placeholder')) {
+        alert(
+          'Export functionality is currently being set up. AWS Lambda integration is pending. ' +
+          'The export feature will be available once AWS services are configured.'
+        );
+        return;
+      }
+
       // Download the file
       ExportService.downloadFile(result.downloadUrl, `${matter.title}-${draft.draftId.slice(0, 8)}.docx`);
     } catch (error: any) {

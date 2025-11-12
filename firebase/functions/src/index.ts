@@ -206,6 +206,7 @@ export const exportGenerate = functions
           note: 'This will forward to AWS Lambda export generation function when configured',
           downloadUrl: 'https://example.com/placeholder.docx',
           exportId: `export-${Date.now()}`,
+          isPlaceholder: true, // Flag to indicate this is a placeholder response
         });
       } catch (error: any) {
         console.error('Export generation proxy error:', error);
