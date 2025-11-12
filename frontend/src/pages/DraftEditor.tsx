@@ -10,6 +10,7 @@ import { PresenceIndicator } from '../components/collaboration/PresenceIndicator
 import { ChangeHistory } from '../components/collaboration/ChangeHistory';
 import { CommentsSidebar } from '../components/collaboration/CommentsSidebar';
 import { AddCommentButton } from '../components/collaboration/AddCommentButton';
+import { ExportService } from '../services/export.service';
 import { useAuth } from '../hooks/useAuth';
 
 const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
@@ -164,6 +165,34 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
     }
   };
 
+  const handleExport = async () => {
+    if (!draft || !matter) return;
+
+    try {
+      const result = await ExportService.exportDraft({
+        draftId: draft.draftId,
+        matterId: draft.matterId,
+        content: {
+          facts: draft.sections.facts?.content || '',
+          liability: draft.sections.liability?.content || '',
+          damages: draft.sections.damages?.content || '',
+          demand: draft.sections.demand?.content || '',
+        },
+        options: {
+          matterTitle: matter.title,
+          clientName: matter.clientName,
+          includeHeader: true,
+          includeFooter: true,
+        },
+      });
+
+      // Download the file
+      ExportService.downloadFile(result.downloadUrl, `${matter.title}-${draft.draftId.slice(0, 8)}.docx`);
+    } catch (error: any) {
+      alert(`Failed to export: ${error.message}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -219,6 +248,13 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
               <span className="text-sm text-gray-500">
                 {getCurrentEditor().getSaveStatus()}
               </span>
+              <button
+                onClick={handleExport}
+                disabled={!draft || draft.state === 'generating'}
+                className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
+              >
+                📄 Export DOCX
+              </button>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium ${
                   draft.state === 'generating'
