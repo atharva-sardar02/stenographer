@@ -8,6 +8,8 @@ import { useEditor } from '../hooks/useEditor';
 import { CollaborationProvider, useCollaboration } from '../contexts/CollaborationContext';
 import { PresenceIndicator } from '../components/collaboration/PresenceIndicator';
 import { ChangeHistory } from '../components/collaboration/ChangeHistory';
+import { CommentsSidebar } from '../components/collaboration/CommentsSidebar';
+import { AddCommentButton } from '../components/collaboration/AddCommentButton';
 import { useAuth } from '../hooks/useAuth';
 
 const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
@@ -273,13 +275,20 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
                     <h2 className="text-xl font-semibold text-gray-900">
                       {getSectionTitle(section)}
                     </h2>
-                    <button
-                      onClick={() => handleRefineClick(section)}
-                      disabled={isRefining}
-                      className="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded disabled:opacity-50"
-                    >
-                      {isRefining ? 'Refining...' : '✨ Refine'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <AddCommentButton
+                        draftId={draftId}
+                        section={section}
+                        onCommentAdded={() => {}}
+                      />
+                      <button
+                        onClick={() => handleRefineClick(section)}
+                        disabled={isRefining}
+                        className="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded disabled:opacity-50"
+                      >
+                        {isRefining ? 'Refining...' : '✨ Refine'}
+                      </button>
+                    </div>
                   </div>
 
                   {isRefining ? (
@@ -305,10 +314,13 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
             })}
           </div>
 
-          {/* Right Sidebar - Change History */}
+          {/* Right Sidebar - Change History & Comments */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-4 sticky top-4">
+            <div className="bg-white rounded-lg shadow p-4 sticky top-4 space-y-6">
               <ChangeHistory />
+              <div className="border-t border-gray-200 pt-6">
+                <CommentsSidebar draftId={draftId} />
+              </div>
             </div>
           </div>
         </div>
