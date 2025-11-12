@@ -119,6 +119,20 @@
             "order": "ASCENDING"
           }
         ]
+      },
+      {
+        "collectionGroup": "templates",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "isActive",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "createdAt",
+            "order": "DESCENDING"
+          }
+        ]
       }
     ],
     "fieldOverrides": []
