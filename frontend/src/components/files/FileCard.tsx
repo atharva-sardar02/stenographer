@@ -20,6 +20,14 @@ export const FileCard: React.FC<FileCardProps> = ({ file, matterId, onDelete }) 
     });
   };
 
+  const getDaysUntilPurge = (purgeAt: Date | string) => {
+    const purgeDate = typeof purgeAt === 'string' ? new Date(purgeAt) : purgeAt;
+    const now = new Date();
+    const diffTime = purgeDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   const getFileIcon = (type: FileDocument['type']) => {
     switch (type) {
       case 'pdf':
@@ -83,6 +91,11 @@ export const FileCard: React.FC<FileCardProps> = ({ file, matterId, onDelete }) 
               <span>•</span>
               <span>Uploaded {formatDate(file.uploadedAt)}</span>
             </div>
+            {file.purgeAt && (
+              <div className="mt-2 text-xs text-yellow-600">
+                Expires in {getDaysUntilPurge(file.purgeAt)} day{getDaysUntilPurge(file.purgeAt) !== 1 ? 's' : ''}
+              </div>
+            )}
             {file.ocrStatus && (
               <div className="mt-2">
                 <OcrStatusBadge file={file} />

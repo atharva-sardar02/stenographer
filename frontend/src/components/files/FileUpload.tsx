@@ -1,6 +1,7 @@
 import { useState, useRef, DragEvent } from 'react';
 import { FileService, UploadProgress } from '../../services/file.service';
 import { validateFile, formatFileSize } from '../../utils/validators';
+import { RetentionWarning } from '../common/RetentionWarning';
 
 interface FileUploadProps {
   matterId: string;
@@ -94,6 +95,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <div className="mb-6">
+      <RetentionWarning type="file" />
       <div
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}

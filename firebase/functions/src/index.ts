@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
+import { retentionPurge, manualPurge } from './scheduled/retention';
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -350,3 +351,6 @@ export const updateUserProfile = functions
       );
     }
   });
+
+// Export retention functions
+export { retentionPurge, manualPurge };

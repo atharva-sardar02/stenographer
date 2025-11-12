@@ -50,21 +50,49 @@
         }
       ]
     },
-    {
-      "collectionGroup": "drafts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "matterId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "lastEditedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    }
-  ],
-  "fieldOverrides": []
-}
+      {
+        "collectionGroup": "drafts",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "matterId",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "lastEditedAt",
+            "order": "DESCENDING"
+          }
+        ]
+      },
+      {
+        "collectionGroup": "files",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "purgeAt",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "isPurged",
+            "order": "ASCENDING"
+          }
+        ]
+      },
+      {
+        "collectionGroup": "exports",
+        "queryScope": "COLLECTION",
+        "fields": [
+          {
+            "fieldPath": "purgeAt",
+            "order": "ASCENDING"
+          },
+          {
+            "fieldPath": "isPurged",
+            "order": "ASCENDING"
+          }
+        ]
+      }
+    ],
+    "fieldOverrides": []
+  }
 
