@@ -28,10 +28,8 @@ export class ExportService {
         throw new Error('User not authenticated');
       }
 
-      // Call Firebase Function directly by name
-      const functionUrl = import.meta.env.VITE_API_BASE_URL 
-        ? `${import.meta.env.VITE_API_BASE_URL}/exportGenerate`
-        : 'https://us-central1-stenographer-dev.cloudfunctions.net/exportGenerate';
+      // Call Firebase Function directly by name (Firebase Functions are accessed by function name, not path)
+      const functionUrl = 'https://us-central1-stenographer-dev.cloudfunctions.net/exportGenerate';
 
       const response = await fetch(functionUrl, {
         method: 'POST',
