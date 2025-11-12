@@ -122,13 +122,22 @@
 - ✅ Firestore indexes for purge queries
 - ✅ Automatic purgeAt calculation (7 days from upload)
 
+### PR #15: Error Handling & Edge Cases
+- ✅ ErrorBoundary component for React error catching
+- ✅ LoadingSpinner component (reusable, multiple sizes)
+- ✅ EmptyState component with icons and actions
+- ✅ useErrorHandler hook for error state management
+- ✅ errorUtils for centralized error handling
+- ✅ Error states with retry functionality across all pages
+- ✅ Consistent loading states across Dashboard, MatterDetail, Templates
+- ✅ Empty states with helpful messages and action buttons
+
 ## In Progress 🚧
 
-### PR #15: Error Handling & Edge Cases (Next)
-- ⏳ Comprehensive error handling
-- ⏳ Loading states
-- ⏳ Empty states
-- ⏳ Edge case handling
+### PR #16: UI/UX Polish & Accessibility (Next)
+- ⏳ UI polish and improvements
+- ⏳ Accessibility features
+- ⏳ Responsive design enhancements
 
 ## Pending Features 📋
 
