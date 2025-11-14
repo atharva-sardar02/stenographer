@@ -51,23 +51,30 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[FileUpload] handleFileSelect called:', e.target.files);
     const files = e.target.files;
     if (files && files.length > 0) {
+      console.log('[FileUpload] File selected:', files[0].name);
       handleFileUpload(files[0]);
+    } else {
+      console.warn('[FileUpload] No files selected');
     }
   };
 
   const handleFileUpload = async (file: File) => {
+    console.log('[FileUpload] handleFileUpload called:', { fileName: file.name, fileSize: file.size, matterId, userId });
     setError(null);
     setUploadProgress(null);
 
     // Validate file
     const validation = validateFile(file);
     if (!validation.isValid) {
+      console.error('[FileUpload] File validation failed:', validation.error);
       setError(validation.error || 'Invalid file');
       return;
     }
 
+    console.log('[FileUpload] File validation passed, starting upload');
     setUploading(true);
 
     try {
@@ -76,10 +83,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         file,
         userId,
         (progress) => {
+          console.log('[FileUpload] Upload progress:', progress);
           setUploadProgress(progress);
         }
       );
 
+      console.log('[FileUpload] Upload successful');
       // Reset form
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -87,6 +96,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       setUploadProgress(null);
       onUploadSuccess();
     } catch (err: any) {
+      console.error('[FileUpload] Upload error:', err);
       setError(err.message || 'Failed to upload file');
     } finally {
       setUploading(false);
@@ -107,14 +117,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             : 'border-gray-300 hover:border-gray-400'
         } ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.docx,.txt"
-          onChange={handleFileSelect}
-          className="hidden"
-          disabled={uploading}
-        />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,.txt,.png,.jpg,.jpeg"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={uploading}
+            />
 
         {uploading && uploadProgress ? (
           <div className="space-y-2">
@@ -157,9 +167,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
                 or drag and drop
               </p>
             </div>
-            <p className="mt-2 text-xs text-gray-500">
-              PDF, DOCX, TXT up to 10MB
-            </p>
+                <p className="mt-2 text-xs text-gray-500">
+                  PDF, DOCX, TXT, PNG, JPG, JPEG up to 10MB
+                </p>
           </>
         )}
       </div>

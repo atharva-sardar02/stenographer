@@ -5,14 +5,15 @@ A comprehensive legal document generation platform that uses AI to create profes
 ## 🚀 Features
 
 - **AI-Powered Draft Generation**: Automatically generate demand letters using OpenAI GPT models
-- **OCR Processing**: Extract text from scanned PDFs using AWS Textract
-- **Template Management**: Create and manage reusable demand letter templates
+- **File Processing**: Upload and process text files (.txt) with automatic content extraction
+- **Template Management**: Create and manage reusable demand letter templates with customizable sections
 - **Real-Time Collaboration**: Multiple users can edit drafts simultaneously with presence indicators
 - **Comments System**: Add threaded comments and replies to drafts
 - **Rich Text Editing**: Professional WYSIWYG editor with formatting tools
 - **DOCX Export**: Export completed drafts as Microsoft Word documents
-- **Data Retention**: Automatic 7-day purge policy for uploaded files and exports
+- **Activity Timeline**: Track all matter activity including file uploads, draft generation, and updates
 - **Role-Based Access**: Attorney and paralegal roles with appropriate permissions
+- **Modern UI**: Clean, professional interface with sticky navigation and responsive design
 
 ## 📋 Table of Contents
 
@@ -32,38 +33,45 @@ stenographer/
 ├── frontend/              # React + Vite frontend
 │   ├── src/
 │   │   ├── components/   # React components
+│   │   │   ├── auth/     # Authentication components
+│   │   │   ├── matters/  # Matter management components
+│   │   │   ├── drafts/   # Draft editor components
+│   │   │   ├── files/    # File upload/management
+│   │   │   ├── templates/# Template management
+│   │   │   └── common/   # Shared components
 │   │   ├── pages/        # Page components
-│   │   ├── services/     # API service layer
-│   │   ├── contexts/     # React contexts
-│   │   ├── hooks/        # Custom React hooks
+│   │   ├── services/    # API service layer
+│   │   ├── contexts/    # React contexts
+│   │   ├── hooks/       # Custom React hooks
 │   │   └── utils/        # Utility functions
-│   └── tests/            # Test files
-├── firebase/              # Firebase Functions and config
+│   └── public/           # Static assets (logo.png)
+├── firebase/             # Firebase Functions and config
 │   ├── functions/        # Cloud Functions
+│   │   ├── src/
+│   │   │   ├── services/ # Business logic services
+│   │   │   └── index.ts  # Function definitions
+│   │   └── lib/          # Compiled JavaScript
+│   ├── public/           # Hosted frontend build
 │   ├── firestore.rules   # Firestore security rules
 │   └── storage.rules     # Storage security rules
-├── aws-lambda/            # AWS Lambda functions
-│   ├── ocr/              # OCR processing
-│   ├── drafts/           # Draft generation
-│   └── exports/          # DOCX export
-├── shared/                # Shared TypeScript types
-└── docs/                  # Documentation
+├── shared/               # Shared TypeScript types
+└── docs/                 # Documentation
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Firebase CLI (`npm install -g firebase-tools`)
-- AWS CLI (for Lambda deployment)
-- Git
+- **Node.js** 18+ and npm
+- **Firebase CLI** (`npm install -g firebase-tools`)
+- **Git**
+- **Google Cloud Billing Account** (for Firebase Storage access)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-org/stenographer.git
+   git clone <repository-url>
    cd stenographer
    ```
 
@@ -76,36 +84,23 @@ stenographer/
    # Firebase Functions
    cd ../firebase/functions
    npm install
-
-   # AWS Lambda functions
-   cd ../../aws-lambda/ocr
-   npm install
-   cd ../drafts
-   npm install
-   cd ../exports
-   npm install
    ```
 
 3. **Set up environment variables**
-
-   Create `.env` files in the following locations:
 
    **Frontend** (`frontend/.env`):
    ```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
    VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
    VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    VITE_FIREBASE_APP_ID=your_app_id
-   VITE_API_BASE_URL=https://us-central1-your-project.cloudfunctions.net
    ```
 
-   **Firebase Functions** (`firebase/functions/.env`):
+   **Firebase Functions** (`firebase/functions/.env` or via Firebase Console):
    ```env
    OPENAI_API_KEY=your_openai_key
-   AWS_ACCESS_KEY_ID=your_aws_key
-   AWS_SECRET_ACCESS_KEY=your_aws_secret
    ```
 
 4. **Initialize Firebase**
@@ -121,6 +116,8 @@ stenographer/
    cd frontend
    npm run dev
    ```
+
+   The app will open at `http://localhost:5173` (Vite default port)
 
 ## 🧪 Testing
 
@@ -150,7 +147,21 @@ npm run test:coverage
 
 ## 🚢 Deployment
 
-### Frontend (Firebase Hosting)
+### Quick Deploy (PowerShell)
+
+Use the provided deployment script:
+```powershell
+.\deploy.ps1
+```
+
+This script will:
+1. Build the frontend
+2. Copy files to `firebase/public`
+3. Deploy to Firebase Hosting
+
+### Manual Deployment
+
+#### Frontend (Firebase Hosting)
 
 1. **Build the frontend**
    ```bash
@@ -158,95 +169,122 @@ npm run test:coverage
    npm run build
    ```
 
-2. **Deploy to Firebase Hosting**
+2. **Copy build files**
+   ```powershell
+   # Windows PowerShell
+   Remove-Item -Recurse -Force firebase\public\*
+   Copy-Item -Recurse -Force frontend\dist\* firebase\public\
+   Copy-Item frontend\public\logo.png firebase\public\
+   ```
+
+3. **Deploy to Firebase Hosting**
    ```bash
    cd firebase
    firebase deploy --only hosting
    ```
 
-### Firebase Functions
+#### Firebase Functions
 
 ```bash
-cd firebase
+cd firebase/functions
+npm run build
+cd ..
 firebase deploy --only functions
 ```
-
-### AWS Lambda Functions
-
-See [docs/deployment.md](docs/deployment.md) for detailed AWS deployment instructions.
 
 ## 🏛️ Architecture
 
 ### Frontend
+
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
 - **Styling**: TailwindCSS
-- **State Management**: Zustand + React Context
+- **State Management**: React Context + Hooks
 - **Routing**: React Router v6
-- **Data Fetching**: TanStack Query
 - **Rich Text Editor**: TipTap
+- **Real-time**: Firestore real-time listeners
 
 ### Backend
-- **Firebase Functions**: API proxy and serverless functions
-- **AWS Lambda**: OCR processing, draft generation, DOCX export
+
+- **Firebase Functions**: Serverless functions for API endpoints
 - **Firestore**: NoSQL database for all application data
 - **Firebase Storage**: File storage for uploaded documents
-- **Firebase Auth**: User authentication
+- **Firebase Auth**: User authentication (Email/Password + Google OAuth)
 
 ### AI Services
+
 - **OpenAI GPT-4**: Draft generation and refinement
-- **AWS Textract**: OCR for scanned PDFs
+- **File Processing**: Automatic text extraction from .txt files
+
+### Key Features
+
+- **Draft Generation**: Firebase Function `draftGenerate` orchestrates AI-powered content generation
+- **File Processing**: Automatic text extraction via `onFileCreate` trigger for .txt files
+- **Real-time Collaboration**: Firestore listeners for presence and collaborative editing
+- **Activity Tracking**: Synthesized from Firestore data (matters, files, drafts)
 
 ## 📚 API Documentation
 
 ### Firebase Functions
 
-#### `api` - Main API Proxy
-- **Endpoint**: `POST /api/v1/*`
-- **Description**: Proxies requests to AWS Lambda functions
-- **Authentication**: Firebase ID token required
+#### `draftGenerate` - Draft Generation
+- **Type**: Callable Function
+- **Description**: Generates a draft demand letter using AI
+- **Input**:
+  ```typescript
+  {
+    matterId: string;
+    templateId: string;
+    variableValues?: Record<string, string>;
+  }
+  ```
+- **Output**: Draft document with generated sections
+
+#### `onFileCreate` - File Processing Trigger
+- **Type**: Firestore Trigger
+- **Description**: Automatically extracts text from .txt files upon upload
+- **Trigger**: When a file document is created in `matters/{matterId}/files/{fileId}`
+- **Action**: Downloads file from Storage, extracts text, saves to `ocrText` field
 
 #### `exportGenerate` - Export Generation
-- **Endpoint**: `POST /api/v1/exports:generate`
+- **Type**: Callable Function
 - **Description**: Generates DOCX export from draft
-- **Request Body**:
-  ```json
+- **Input**:
+  ```typescript
   {
-    "draftId": "string",
-    "matterId": "string",
-    "content": {
-      "facts": "string",
-      "liability": "string",
-      "damages": "string",
-      "demand": "string"
-    },
-    "options": {
-      "matterTitle": "string",
-      "clientName": "string"
-    }
+    draftId: string;
+    matterId: string;
+    content: {
+      facts: string;
+      liability: string;
+      damages: string;
+      demand: string;
+    };
+    options: {
+      matterTitle: string;
+      clientName: string;
+    };
   }
   ```
 
-#### `retentionPurge` - Scheduled Retention Job
-- **Schedule**: Daily at midnight (America/New_York)
-- **Description**: Automatically purges files and exports older than 7 days
+## 🎨 UI Features
 
-### AWS Lambda Functions
+### Navigation
+- **Sticky Header**: Consistent navigation across all pages
+- **Logo Integration**: Brand logo displayed in header
+- **Responsive Design**: Mobile-friendly layout
 
-#### OCR Processing (`aws-lambda/ocr`)
-- **Trigger**: Firebase Function proxy
-- **Input**: PDF file from Firebase Storage
-- **Output**: Extracted text with confidence scores
+### Matter Management
+- **Collapsible Participants**: Space-saving expandable section
+- **Activity Timeline**: Visual timeline of all matter activity
+- **Status Badges**: Color-coded status indicators
+- **Metadata Grid**: Clean, organized display of creation/update dates
 
-#### Draft Generation (`aws-lambda/drafts`)
-- **Trigger**: Firebase Function proxy
-- **Input**: Template, files, variable values
-- **Output**: Generated draft with all sections
-
-#### DOCX Export (`aws-lambda/exports`)
-- **Trigger**: Firebase Function proxy
-- **Input**: Draft content
-- **Output**: DOCX file in Firebase Storage
+### Draft Editor
+- **Section Navigation**: Easy navigation between sections
+- **Rich Text Editing**: Full formatting capabilities
+- **Auto-save**: Automatic draft saving
+- **Export**: One-click DOCX export
 
 ## 🔐 Security
 
@@ -254,15 +292,42 @@ See [docs/deployment.md](docs/deployment.md) for detailed AWS deployment instruc
 - **Authorization**: Role-based access control (Attorney/Paralegal)
 - **Firestore Rules**: Enforced at database level
 - **Storage Rules**: Enforced at storage level
-- **API Security**: Firebase ID token validation
+- **Function Security**: Firebase ID token validation
 
 ## 📖 Documentation
 
 - [Product Requirements Document](prd_stenographer.md)
+- [Setup Guide](docs/setup.md)
+- [Architecture](docs/architecture.md)
 - [Data Model](docs/data-model.md)
 - [Deployment Guide](docs/deployment.md)
 - [API Reference](docs/api-reference.md)
 - [Development Guide](docs/development.md)
+
+## 🛠️ Development Workflow
+
+1. **Create a feature branch**
+   ```bash
+   git checkout -b feature/description
+   ```
+
+2. **Make changes and test locally**
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+3. **Build and test**
+   ```bash
+   npm run build
+   npm test
+   ```
+
+4. **Deploy to Firebase**
+   ```bash
+   # Use deploy script or manual steps above
+   .\deploy.ps1
+   ```
 
 ## 🤝 Contributing
 

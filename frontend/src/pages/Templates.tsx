@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { TemplateService, Template } from '../services/template.service';
 import { TemplateCard } from '../components/templates/TemplateCard';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { EmptyState } from '../components/common/EmptyState';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Templates: React.FC = () => {
   const { userProfile } = useAuth();
@@ -48,22 +48,65 @@ export const Templates: React.FC = () => {
   };
 
   return (
-    <main id="main-content" className="max-w-7xl mx-auto p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Templates</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Manage demand letter templates
-          </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header - Sticky */}
+      <header className="bg-white shadow sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <Link to="/dashboard" className="flex items-center gap-3">
+                <img 
+                  src="/logo.png" 
+                  alt="Stenographer Logo" 
+                  className="h-10 w-10 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Stenographer</h1>
+                  <p className="text-sm text-gray-600">Demand Letter Generator</p>
+                </div>
+              </Link>
+              <nav className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate('/templates')}
+                  className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md"
+                >
+                  Templates
+                </button>
+              </nav>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Dashboard
+              </button>
+            </div>
+          </div>
         </div>
+      </header>
+
+      <main id="main-content" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <p className="text-sm text-gray-600">
+              Manage demand letter templates
+            </p>
+          </div>
         {isAttorney && (
-          <Link
-            to="/templates/new"
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Create New Template
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/templates/new')}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center gap-2"
+            >
+              <span>+</span>
+              <span>Add Template</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -139,7 +182,8 @@ export const Templates: React.FC = () => {
           ))}
         </div>
       )}
-    </main>
+      </main>
+    </div>
   );
 };
 

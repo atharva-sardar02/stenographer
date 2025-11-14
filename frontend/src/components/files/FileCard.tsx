@@ -1,6 +1,5 @@
 import { formatFileSize } from '../../utils/validators';
 import { FileService, FileDocument } from '../../services/file.service';
-import { OcrStatusBadge } from './OcrStatusBadge';
 
 interface FileCardProps {
   file: FileDocument;
@@ -36,21 +35,12 @@ export const FileCard: React.FC<FileCardProps> = ({ file, matterId, onDelete }) 
         return '📝';
       case 'txt':
         return '📋';
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+        return '🖼️';
       default:
         return '📎';
-    }
-  };
-
-  const handleRetryOcr = async () => {
-    if (file.type !== 'pdf') {
-      alert('OCR is only available for PDF files');
-      return;
-    }
-
-    try {
-      await FileService.triggerOcr(matterId, file.fileId, file.storagePath);
-    } catch (error: any) {
-      alert(`Failed to trigger OCR: ${error.message}`);
     }
   };
 
@@ -94,19 +84,6 @@ export const FileCard: React.FC<FileCardProps> = ({ file, matterId, onDelete }) 
             {file.purgeAt && (
               <div className="mt-2 text-xs text-yellow-600">
                 Expires in {getDaysUntilPurge(file.purgeAt)} day{getDaysUntilPurge(file.purgeAt) !== 1 ? 's' : ''}
-              </div>
-            )}
-            {file.ocrStatus && (
-              <div className="mt-2">
-                <OcrStatusBadge file={file} />
-                {file.ocrStatus === 'failed' && file.type === 'pdf' && (
-                  <button
-                    onClick={handleRetryOcr}
-                    className="mt-2 px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
-                  >
-                    Retry OCR
-                  </button>
-                )}
               </div>
             )}
           </div>

@@ -6,6 +6,7 @@ import { DraftService, Draft } from '../../services/draft.service';
 import { FileUpload } from '../files/FileUpload';
 import { FileList } from '../files/FileList';
 import { GenerateDraftModal } from '../drafts/GenerateDraftModal';
+import { ActivityTimeline } from './ActivityTimeline';
 import { useAuth } from '../../hooks/useAuth';
 
 interface MatterTabsProps {
@@ -242,9 +243,18 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
                       </div>
                       <Link
                         to={`/drafts/${draft.draftId}`}
-                        className="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded"
+                        className={`px-3 py-1 text-xs font-medium rounded ${
+                          draft.state === 'generating'
+                            ? 'text-gray-400 cursor-not-allowed pointer-events-none'
+                            : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                        }`}
+                        onClick={(e) => {
+                          if (draft.state === 'generating') {
+                            e.preventDefault();
+                          }
+                        }}
                       >
-                        Edit
+                        {draft.state === 'generating' ? 'Generating...' : 'Edit'}
                       </Link>
                     </div>
                   </div>
@@ -262,11 +272,8 @@ export const MatterTabs: React.FC<MatterTabsProps> = ({ matter }) => {
         )}
 
         {activeTab === 'activity' && (
-          <div className="text-center py-12">
-            <p className="text-gray-600 mb-4">No activity recorded yet.</p>
-            <p className="text-sm text-gray-500">
-              Activity tracking will be implemented in future PRs.
-            </p>
+          <div className="p-6">
+            <ActivityTimeline matterId={matter.matterId} />
           </div>
         )}
       </div>

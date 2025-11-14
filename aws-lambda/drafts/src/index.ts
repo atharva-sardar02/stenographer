@@ -3,6 +3,21 @@ import { generateDraft, GenerateDraftRequest } from './generate';
 import { refineSection, RefineSectionRequest } from './refine';
 
 /**
+ * Main router handler that routes requests based on path
+ */
+export const handler = async (
+  event: APIGatewayProxyEvent
+): Promise<APIGatewayProxyResult> => {
+  const path = event.path || '';
+  
+  if (path.includes('refineSection') || path.includes('drafts:refineSection')) {
+    return refineSectionHandler(event);
+  } else {
+    return generate(event);
+  }
+};
+
+/**
  * Draft generation handler
  * POST /v1/drafts:generate
  * 

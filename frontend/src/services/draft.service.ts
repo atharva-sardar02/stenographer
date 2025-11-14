@@ -3,7 +3,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  addDoc,
   deleteDoc,
   query,
   where,
@@ -62,55 +61,32 @@ export class DraftService {
         throw new Error('User not authenticated');
       }
 
-        // TODO: Call Firebase Function proxy to AWS Lambda
-        // For now, create a placeholder draft
-        const draftData = {
+      // Call Firebase Function to generate draft
+      const functionUrl = 'https://us-central1-stenographer-dev.cloudfunctions.net/draftGenerate';
+
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify({
           matterId: data.matterId,
           templateId: data.templateId,
-          state: 'generating' as const,
-          sections: {
-            facts: { content: '', generatedAt: null },
-            liability: { content: '', generatedAt: null },
-            damages: { content: '', generatedAt: null },
-            demand: { content: '', generatedAt: null },
-          },
-          variables: data.variables,
-          generatedBy: user.uid,
-          lastGeneratedAt: serverTimestamp(),
-          lastEditedAt: serverTimestamp(),
-          lastEditedBy: user.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        };
+          fileIds: data.fileIds,
+          variables: data.variables || {},
+        }),
+      });
 
-        const docRef = await addDoc(collection(db, 'drafts'), draftData);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to generate draft' }));
+        throw new Error(errorData.message || 'Failed to generate draft');
+      }
 
-        // TODO: Trigger AWS Lambda draft generation
-        // const response = await fetch(
-        //   `${import.meta.env.VITE_API_BASE_URL}/v1/drafts:generate`,
-        //   {
-        //     method: 'POST',
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //       Authorization: `Bearer ${await user.getIdToken()}`,
-        //     },
-        //     body: JSON.stringify({
-        //       matterId: data.matterId,
-        //       templateId: data.templateId,
-        //       fileIds: data.fileIds,
-        //       variables: data.variables,
-        //       userId: user.uid,
-        //     }),
-        //   }
-        // );
-
-        // if (!response.ok) {
-        //   throw new Error('Failed to generate draft');
-        // }
-
-        return docRef.id;
-      } catch (error: any) {
-        throw new Error(`Failed to generate draft: ${error.message}`);
+      const result = await response.json();
+      return result.draftId;
+    } catch (error: any) {
+      throw new Error(`Failed to generate draft: ${error.message}`);
     }
   }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   TemplateService,
   CreateTemplateData,
@@ -110,23 +110,65 @@ export const TemplateForm: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          {isEditing ? 'Edit Template' : 'Create New Template'}
-        </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          {isEditing
-            ? 'Update template details and sections'
-            : 'Create a new demand letter template with customizable sections'}
-        </p>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-800">{error}</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header - Sticky */}
+      <header className="bg-white shadow sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-6">
+              <Link to="/dashboard" className="flex items-center gap-3">
+                <img 
+                  src="/logo.png" 
+                  alt="Stenographer Logo" 
+                  className="h-10 w-10 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Stenographer</h1>
+                  <p className="text-sm text-gray-600">Demand Letter Generator</p>
+                </div>
+              </Link>
+              <nav className="flex items-center gap-4">
+                <Link
+                  to="/templates"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  Back to Templates
+                </Link>
+              </nav>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Dashboard
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isEditing ? 'Edit Template' : 'Create New Template'}
+          </h1>
+          <p className="text-sm text-gray-600 mt-1">
+            {isEditing
+              ? 'Update template details and sections'
+              : 'Create a new demand letter template with customizable sections'}
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
@@ -242,6 +284,7 @@ export const TemplateForm: React.FC = () => {
           </button>
         </div>
       </form>
+      </main>
     </div>
   );
 };

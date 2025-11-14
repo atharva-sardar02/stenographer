@@ -12,14 +12,15 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../config/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, storage, auth, functions } from '../config/firebase';
 
 // File type definition (matches shared/types/file.ts)
 export interface FileDocument {
   fileId: string;
   matterId: string;
   name: string;
-  type: 'pdf' | 'docx' | 'txt';
+  type: 'pdf' | 'docx' | 'txt' | 'png' | 'jpg' | 'jpeg';
   size: number;
   storagePath: string;
   uploadedBy: string;
@@ -53,13 +54,18 @@ export class FileService {
     onProgress?: (progress: UploadProgress) => void
   ): Promise<string> {
     try {
+      console.log('[FileService] Starting upload:', { matterId, fileName: file.name, fileSize: file.size, userId });
+      
       // Generate unique file ID
       const fileId = doc(collection(db, 'matters', matterId, 'files')).id;
       const storagePath = `matters/${matterId}/files/${fileId}_${file.name}`;
       const storageRef = ref(storage, storagePath);
 
+      console.log('[FileService] Storage ref created:', { fileId, storagePath });
+
       // Upload file to Firebase Storage
       const uploadTask = uploadBytesResumable(storageRef, file);
+      console.log('[FileService] Upload task created');
 
       // Track upload progress
       return new Promise((resolve, reject) => {
@@ -76,10 +82,18 @@ export class FileService {
             onProgress?.(progress);
           },
           (error) => {
+            console.error('[FileService] Upload error:', error);
+            console.error('[FileService] Error details:', {
+              code: error.code,
+              message: error.message,
+              serverResponse: error.serverResponse,
+            });
             reject(new Error(`Upload failed: ${error.message}`));
           },
           async () => {
             try {
+              console.log('[FileService] Upload completed, creating Firestore document');
+              
               // Calculate purge date (7 days from now)
               const purgeAt = new Date();
               purgeAt.setDate(purgeAt.getDate() + 7);
@@ -103,19 +117,23 @@ export class FileService {
                 isPurged: false,
               };
 
+              console.log('[FileService] Adding Firestore document:', fileData);
               await addDoc(
                 collection(db, 'matters', matterId, 'files'),
                 fileData
               );
 
+              console.log('[FileService] Upload successful, fileId:', fileId);
               resolve(fileId);
             } catch (error: any) {
+              console.error('[FileService] Error finalizing upload:', error);
               reject(new Error(`Failed to finalize upload: ${error.message}`));
             }
           }
         );
       });
     } catch (error: any) {
+      console.error('[FileService] Upload failed with exception:', error);
       throw new Error(`Failed to upload file: ${error.message}`);
     }
   }
@@ -255,14 +273,24 @@ export class FileService {
 
   /**
    * Trigger OCR processing for a file
-   * Note: This requires AWS Lambda integration
    */
   static async triggerOcr(
     matterId: string,
     fileId: string,
-    _storagePath: string
+    storagePath: string
   ): Promise<void> {
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Get file to determine file type
+      const file = await this.getFile(matterId, fileId);
+      if (!file) {
+        throw new Error('File not found');
+      }
+
       // Update file status to processing
       const fileRef = doc(db, 'matters', matterId, 'files', fileId);
       await updateDoc(fileRef, {
@@ -270,27 +298,29 @@ export class FileService {
         ocrError: null,
       });
 
-      // TODO: Call Firebase Function proxy to AWS Lambda OCR endpoint
-      // For now, this is a placeholder
-      // const response = await fetch(
-      //   `${import.meta.env.VITE_API_BASE_URL}/v1/ocr:extract`,
-      //   {
-      //     method: 'POST',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //       Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
-      //     },
-      //     body: JSON.stringify({
-      //       matterId,
-      //       fileId,
-      //       storagePath,
-      //     }),
-      //   }
-      // );
+      // Call Firebase Function OCR endpoint
+      const functionUrl = 'https://us-central1-stenographer-dev.cloudfunctions.net/ocrExtract';
 
-      // if (!response.ok) {
-      //   throw new Error('Failed to trigger OCR');
-      // }
+      const response = await fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${await user.getIdToken()}`,
+        },
+        body: JSON.stringify({
+          matterId,
+          fileId,
+          storagePath,
+          fileType: file.type,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to trigger OCR' }));
+        throw new Error(errorData.message || 'Failed to trigger OCR');
+      }
+
+      // OCR processing is now in progress, the function will update the file status
     } catch (error: any) {
       // Update file status to failed
       const fileRef = doc(db, 'matters', matterId, 'files', fileId);
@@ -303,12 +333,36 @@ export class FileService {
   }
 
   /**
+   * Extract text from a TXT file manually (workaround for trigger issues)
+   */
+  static async extractTextFromFile(matterId: string, fileId: string): Promise<void> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      const extractText = httpsCallable(functions, 'extractTextFromFile');
+      const result = await extractText({ matterId, fileId });
+      
+      if (!(result.data as any).success) {
+        throw new Error('Text extraction failed');
+      }
+    } catch (error: any) {
+      throw new Error(`Failed to extract text: ${error.message}`);
+    }
+  }
+
+  /**
    * Determine file type from filename
    */
-  private static getFileType(filename: string): 'pdf' | 'docx' | 'txt' {
+  private static getFileType(filename: string): 'pdf' | 'docx' | 'txt' | 'png' | 'jpg' | 'jpeg' {
     const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
     if (extension === '.pdf') return 'pdf';
     if (extension === '.docx') return 'docx';
+    if (extension === '.png') return 'png';
+    if (extension === '.jpg') return 'jpg';
+    if (extension === '.jpeg') return 'jpeg';
     return 'txt';
   }
 }

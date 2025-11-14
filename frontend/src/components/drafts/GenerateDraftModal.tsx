@@ -100,22 +100,9 @@ export const GenerateDraftModal: React.FC<GenerateDraftModalProps> = ({
     setError(null);
     setGenerating(true);
     setProgress(0);
+    setCurrentSection('facts');
 
     try {
-      // Simulate progress updates
-      const sections: Array<'facts' | 'liability' | 'damages' | 'demand'> = [
-        'facts',
-        'liability',
-        'damages',
-        'demand',
-      ];
-
-      for (let i = 0; i < sections.length; i++) {
-        setCurrentSection(sections[i]);
-        setProgress(((i + 1) / sections.length) * 100);
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate generation time
-      }
-
       const draftData: GenerateDraftData = {
         matterId,
         templateId: selectedTemplateId,
@@ -123,9 +110,41 @@ export const GenerateDraftModal: React.FC<GenerateDraftModalProps> = ({
         variables: variableValues,
       };
 
-      const draftId = await DraftService.generateDraft(draftData);
-      onSuccess(draftId);
-      onClose();
+      // Show progress updates while generating
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) return prev; // Don't go to 100% until complete
+          return prev + 5;
+        });
+      }, 2000);
+
+      // Update current section indicator
+      const sectionInterval = setInterval(() => {
+        setCurrentSection((prev) => {
+          if (prev === 'facts') return 'liability';
+          if (prev === 'liability') return 'damages';
+          if (prev === 'damages') return 'demand';
+          return 'facts';
+        });
+      }, 8000);
+
+      try {
+        const draftId = await DraftService.generateDraft(draftData);
+        clearInterval(progressInterval);
+        clearInterval(sectionInterval);
+        setProgress(100);
+        setCurrentSection('demand');
+        
+        // Small delay to show completion
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        
+        onSuccess(draftId);
+        onClose();
+      } catch (err: any) {
+        clearInterval(progressInterval);
+        clearInterval(sectionInterval);
+        throw err;
+      }
     } catch (err: any) {
       setError(`Failed to generate draft: ${err.message}`);
     } finally {
@@ -230,26 +249,40 @@ export const GenerateDraftModal: React.FC<GenerateDraftModalProps> = ({
                     <p className="text-sm text-gray-500">No files available</p>
                   ) : (
                     <div className="space-y-2">
-                      {files.map((file) => (
-                        <label
-                          key={file.fileId}
-                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedFileIds.includes(file.fileId)}
-                            onChange={() => handleFileToggle(file.fileId)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <span className="text-sm text-gray-700">{file.name}</span>
-                          <span className="text-xs text-gray-500">
-                            ({file.type.toUpperCase()})
-                          </span>
-                          {file.ocrStatus === 'done' && (
-                            <span className="text-xs text-green-600">✓ OCR Complete</span>
-                          )}
-                        </label>
-                      ))}
+                      {files.map((file) => {
+                        const needsOcr = ['pdf', 'png', 'jpg', 'jpeg'].includes(file.type);
+                        const hasOcr = file.ocrStatus === 'done';
+                        const isTextFile = file.type === 'txt';
+
+                        return (
+                          <label
+                            key={file.fileId}
+                            className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedFileIds.includes(file.fileId)}
+                              onChange={() => handleFileToggle(file.fileId)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="text-sm text-gray-700">{file.name}</span>
+                            <span className="text-xs text-gray-500">
+                              ({file.type.toUpperCase()})
+                            </span>
+                            {isTextFile && (
+                              <span className="text-xs text-green-600">✓ Text File</span>
+                            )}
+                            {needsOcr && hasOcr && (
+                              <span className="text-xs text-green-600">✓ OCR Complete</span>
+                            )}
+                            {needsOcr && !hasOcr && (
+                              <span className="text-xs text-gray-500" title="Will be skipped unless OCR is run">
+                                No OCR
+                              </span>
+                            )}
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

@@ -10,18 +10,18 @@ High-level architecture and design decisions for the Stenographer application.
 │   (Vite + TS)   │
 └────────┬────────┘
          │
-         │ HTTP/REST
+         │ HTTP/REST + WebSocket
          │
 ┌────────▼─────────────────┐
 │   Firebase Functions     │
-│   (API Proxy Layer)      │
+│   (Serverless API)       │
 └────────┬─────────────────┘
          │
     ┌────┴────┐
     │         │
 ┌───▼───┐ ┌──▼──────────┐
-│Firebase│ │ AWS Lambda  │
-│Services│ │  Functions  │
+│Firebase│ │  OpenAI API │
+│Services│ │  (GPT-4)   │
 └────────┘ └─────────────┘
 ```
 
@@ -32,104 +32,178 @@ High-level architecture and design decisions for the Stenographer application.
 **Layered Architecture**:
 - **Presentation Layer**: React components and pages
 - **Business Logic Layer**: Services and hooks
-- **Data Layer**: Firebase SDK and API clients
+- **Data Layer**: Firebase SDK (Firestore, Storage, Auth)
 
 **State Management**:
-- **Global State**: Zustand stores
-- **Server State**: TanStack Query
+- **Global State**: React Context (AuthContext, CollaborationContext)
+- **Server State**: Firestore real-time listeners
 - **Local State**: React useState/useReducer
-- **Context**: AuthContext, CollaborationContext
+- **Form State**: Component-level state management
+
+**Key Components**:
+- `Dashboard.tsx`: Main landing page with matter list
+- `MatterDetail.tsx`: Matter overview with tabs
+- `DraftEditor.tsx`: Rich text editor for drafts
+- `TemplateForm.tsx`: Template creation/editing
+- `ActivityTimeline.tsx`: Activity tracking component
 
 ### Backend
 
 **Serverless Architecture**:
-- **Firebase Functions**: API gateway and orchestration
-- **AWS Lambda**: Heavy processing (OCR, AI, DOCX)
-- **Firestore**: Primary database
+- **Firebase Functions**: API endpoints and triggers
+- **Firestore**: Primary database (NoSQL)
 - **Firebase Storage**: File storage
+- **Firebase Auth**: User authentication
+
+**Key Functions**:
+- `draftGenerate`: AI-powered draft generation
+- `onFileCreate`: Automatic text extraction from files
+- `exportGenerate`: DOCX export generation
 
 ## Data Flow
 
 ### Draft Generation Flow
 
 ```
-User → Frontend → Firebase Function → AWS Lambda (Drafts)
-                                              │
-                                              ├─→ OpenAI API
-                                              └─→ Firestore (Save)
+User → Frontend → Firebase Function (draftGenerate)
+                      │
+                      ├─→ Fetch source files from Firestore
+                      ├─→ Extract text content
+                      ├─→ Build context from files
+                      ├─→ OpenAI API (Generate sections)
+                      └─→ Save draft to Firestore
 ```
 
 ### File Upload Flow
 
 ```
-User → Frontend → Firebase Storage
+User → Frontend → Firebase Storage (Upload file)
                       │
-                      └─→ Firestore (Metadata)
+                      └─→ Firestore (Create file document)
                       │
-                      └─→ Firebase Function → AWS Lambda (OCR)
-                                                │
-                                                └─→ AWS Textract
+                      └─→ onFileCreate Trigger
+                            │
+                            ├─→ Download from Storage
+                            ├─→ Extract text (.txt files)
+                            └─→ Update Firestore (ocrText field)
 ```
 
 ### Real-Time Collaboration
 
 ```
-User 1 → Frontend → Firestore (Collaboration Document)
+User 1 → Frontend → Firestore (Update draft)
                           │
-User 2 ← Frontend ←───────┘
+User 2 ← Frontend ←───────┘ (Real-time listener)
+```
+
+### Activity Tracking
+
+```
+Firestore Events → ActivityTimeline Component
+    │
+    ├─→ Matter creation/updates
+    ├─→ File uploads
+    └─→ Draft generation/updates
 ```
 
 ## Security Architecture
 
 ### Authentication Flow
 
-1. User authenticates with Firebase Auth
+1. User authenticates with Firebase Auth (Email/Password or Google OAuth)
 2. Frontend receives ID token
-3. Token included in all API requests
-4. Firebase Functions validate token
-5. AWS Lambda receives validated user context
+3. Token automatically included in Firestore/Storage requests
+4. Firestore Rules validate user permissions
+5. Functions receive authenticated user context
 
 ### Authorization
 
-- **Firestore Rules**: Enforce read/write permissions
-- **Storage Rules**: Control file access
-- **Function Logic**: Role-based access control
+- **Firestore Rules**: Enforce read/write permissions based on user role
+- **Storage Rules**: Control file access by matter ownership
+- **Function Logic**: Role-based access control (Attorney vs Paralegal)
+
+### Role-Based Access Control
+
+- **Attorney**: Full access to all matters, can manage participants
+- **Paralegal**: Access to assigned matters, can create drafts and files
 
 ## Scalability Considerations
 
 ### Frontend
 
-- Code splitting for reduced initial load
+- Code splitting via Vite
 - Lazy loading of routes
-- Image optimization
-- Caching strategies
+- Image optimization (logo.png)
+- Efficient Firestore queries with indexes
 
 ### Backend
 
-- **Firebase Functions**: Auto-scaling
-- **AWS Lambda**: Auto-scaling with concurrency limits
-- **Firestore**: Horizontal scaling
-- **Firebase Storage**: CDN-backed
+- **Firebase Functions**: Auto-scaling based on demand
+- **Firestore**: Horizontal scaling, automatic indexing
+- **Firebase Storage**: CDN-backed global distribution
+- **OpenAI API**: Rate limiting and retry logic
 
 ## Performance Optimization
 
-1. **Caching**: TanStack Query for API responses
-2. **Debouncing**: Auto-save in editor
-3. **Pagination**: Large lists paginated
-4. **Lazy Loading**: Components loaded on demand
-5. **Batch Operations**: Multiple writes batched
+1. **Caching**: Browser caching for static assets
+2. **Debouncing**: Auto-save in editor (debounced)
+3. **Lazy Loading**: Components loaded on demand
+4. **Batch Operations**: Firestore batch writes where possible
+5. **Efficient Queries**: Firestore indexes for common queries
+
+## File Processing
+
+### Current Implementation
+
+- **Text Files (.txt)**: Automatic extraction via `onFileCreate` trigger
+- **Process**: Download from Storage → Extract UTF-8 text → Save to Firestore
+- **Status Tracking**: `ocrStatus` field ('pending', 'done', 'failed')
+
+### Future Enhancements
+
+- PDF text extraction
+- Image OCR (if needed)
+- Document parsing and structuring
 
 ## Monitoring & Logging
 
 - **Firebase Console**: Function logs and metrics
-- **CloudWatch**: AWS Lambda logs
-- **Error Tracking**: (Sentry recommended)
-- **Analytics**: Firebase Analytics (optional)
+- **Firestore Console**: Database usage and performance
+- **Browser Console**: Frontend debugging
+- **Function Logs**: Structured logging with `logger.info/error`
+
+## Deployment Architecture
+
+### Frontend Deployment
+
+1. Build with Vite (`npm run build`)
+2. Copy `dist/` to `firebase/public/`
+3. Deploy via Firebase Hosting
+4. CDN distribution automatically handled
+
+### Functions Deployment
+
+1. TypeScript compilation (`npm run build`)
+2. Deploy via Firebase CLI (`firebase deploy --only functions`)
+3. Automatic versioning and rollback support
+
+## Data Retention
+
+- **Files**: 7-day retention policy (configurable)
+- **Exports**: 7-day retention policy (configurable)
+- **Drafts**: Retained indefinitely (user-controlled)
+- **Matters**: Retained indefinitely (user-controlled)
+
+## Error Handling
+
+- **Frontend**: Error boundaries and user-friendly error messages
+- **Functions**: Try-catch blocks with detailed error logging
+- **Firestore**: Transaction rollback on errors
+- **Storage**: Retry logic for upload failures
 
 ## Disaster Recovery
 
-- **Backups**: Firestore automated backups
+- **Backups**: Firestore automated backups (if enabled)
 - **Version Control**: All code in Git
-- **Environment Separation**: Dev/Staging/Prod
-- **Rollback Procedures**: Documented in deployment guide
-
+- **Environment Separation**: Dev/Staging/Prod (via Firebase projects)
+- **Rollback Procedures**: Firebase function versioning

@@ -98,6 +98,7 @@ export class MatterService {
 
   /**
    * Get all matters for a user
+   * Includes matters created by the user AND matters where the user is a participant
    * Supports filtering by status and searching by title/client name
    */
   static async getMatters(
@@ -108,28 +109,48 @@ export class MatterService {
     }
   ): Promise<Matter[]> {
     try {
-      let q = query(
+      // Get matters created by the user
+      let createdByQuery = query(
         collection(db, 'matters'),
         where('createdBy', '==', userId),
         orderBy('createdAt', 'desc')
       );
 
+      // Get matters where user is a participant
+      let participantQuery = query(
+        collection(db, 'matters'),
+        where('participants', 'array-contains', userId),
+        orderBy('createdAt', 'desc')
+      );
+
       // Add status filter if provided
       if (options?.status) {
-        q = query(
+        createdByQuery = query(
           collection(db, 'matters'),
           where('createdBy', '==', userId),
           where('status', '==', options.status),
           orderBy('createdAt', 'desc')
         );
+        participantQuery = query(
+          collection(db, 'matters'),
+          where('participants', 'array-contains', userId),
+          where('status', '==', options.status),
+          orderBy('createdAt', 'desc')
+        );
       }
 
-      const querySnapshot = await getDocs(q);
-      let matters: Matter[] = [];
+      // Execute both queries in parallel
+      const [createdBySnapshot, participantSnapshot] = await Promise.all([
+        getDocs(createdByQuery),
+        getDocs(participantQuery),
+      ]);
 
-      querySnapshot.forEach((doc) => {
+      // Combine results and remove duplicates
+      const matterMap = new Map<string, Matter>();
+
+      createdBySnapshot.forEach((doc) => {
         const data = doc.data();
-        matters.push({
+        matterMap.set(doc.id, {
           matterId: doc.id,
           title: data.title,
           clientName: data.clientName,
@@ -139,6 +160,32 @@ export class MatterService {
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
         });
+      });
+
+      participantSnapshot.forEach((doc) => {
+        // Only add if not already in map (avoid duplicates)
+        if (!matterMap.has(doc.id)) {
+          const data = doc.data();
+          matterMap.set(doc.id, {
+            matterId: doc.id,
+            title: data.title,
+            clientName: data.clientName,
+            status: data.status,
+            participants: data.participants || [],
+            createdBy: data.createdBy,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+          });
+        }
+      });
+
+      let matters = Array.from(matterMap.values());
+
+      // Sort by createdAt descending
+      matters.sort((a, b) => {
+        const dateA = typeof a.createdAt === 'string' ? new Date(a.createdAt) : a.createdAt;
+        const dateB = typeof b.createdAt === 'string' ? new Date(b.createdAt) : b.createdAt;
+        return dateB.getTime() - dateA.getTime();
       });
 
       // Client-side search filtering if search query provided

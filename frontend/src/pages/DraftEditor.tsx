@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import { DraftService, Draft } from '../services/draft.service';
 import { MatterService, Matter } from '../services/matter.service';
 import { RefineSectionModal } from '../components/drafts/RefineSectionModal';
@@ -47,6 +49,44 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
 
   useEffect(() => {
     loadDraft();
+    
+    // Set up real-time listener for draft updates
+    const draftRef = doc(db, 'drafts', draftId);
+    const unsubscribe = onSnapshot(
+      draftRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          const draftData: Draft = {
+            draftId: snapshot.id,
+            matterId: data.matterId,
+            templateId: data.templateId,
+            state: data.state,
+            sections: data.sections,
+            variables: data.variables || {},
+            generatedBy: data.generatedBy,
+            lastGeneratedAt: data.lastGeneratedAt?.toDate() || new Date(),
+            lastEditedAt: data.lastEditedAt?.toDate() || new Date(),
+            lastEditedBy: data.lastEditedBy,
+            createdAt: data.createdAt?.toDate() || new Date(),
+            updatedAt: data.updatedAt?.toDate() || new Date(),
+            error: data.error,
+          };
+          setDraft(draftData);
+          setLoading(false);
+        } else {
+          setError('Draft not found');
+          setLoading(false);
+        }
+      },
+      (err) => {
+        console.error('Error listening to draft updates:', err);
+        setError('Failed to load draft');
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, [draftId]);
 
   const loadDraft = async () => {
@@ -202,7 +242,7 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
     }
   };
 
-  if (loading) {
+  if (loading || !draft) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -213,11 +253,46 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
     );
   }
 
-  if (error || !draft) {
+  // Check if all sections are empty (draft not yet generated)
+  const allSectionsEmpty =
+    (!draft.sections.facts?.content || draft.sections.facts.content.trim() === '') &&
+    (!draft.sections.liability?.content || draft.sections.liability.content.trim() === '') &&
+    (!draft.sections.damages?.content || draft.sections.damages.content.trim() === '') &&
+    (!draft.sections.demand?.content || draft.sections.demand.content.trim() === '');
+
+  // Block access if draft is still generating OR if all sections are empty
+  if (draft.state === 'generating' || allSectionsEmpty) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            {draft.state === 'generating' ? 'Generating Draft' : 'Preparing Draft'}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {draft.state === 'generating'
+              ? 'Your draft is being generated using AI. This usually takes 15-30 seconds.'
+              : 'Your draft content is being prepared. Please wait...'}
+          </p>
+          <p className="text-sm text-gray-500">
+            The page will automatically update when generation is complete.
+          </p>
+          {draft.error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600 font-medium">Error:</p>
+              <p className="text-sm text-red-600">{draft.error}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Draft not found'}</p>
+          <p className="text-red-600 mb-4">{error}</p>
           <Link
             to="/dashboard"
             className="text-blue-600 hover:text-blue-700 underline"
@@ -231,26 +306,35 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
+      {/* Header - Sticky */}
+      <header className="bg-white shadow sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                to={`/matters/${draft.matterId}`}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                ← Back to Matter
-              </Link>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Draft Editor</h1>
-                {matter && (
+            <div className="flex items-center gap-6">
+              <Link to="/dashboard" className="flex items-center gap-3">
+                <img 
+                  src="/logo.png" 
+                  alt="Stenographer Logo" 
+                  className="h-10 w-10 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Stenographer</h1>
                   <p className="text-sm text-gray-600">
-                    {matter.title} • {matter.clientName}
+                    {matter ? `${matter.title} • ${matter.clientName}` : 'Demand Letter Generator'}
                   </p>
-                )}
-              </div>
+                </div>
+              </Link>
+              <nav className="flex items-center gap-4">
+                <Link
+                  to={`/matters/${draft.matterId}`}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  Back to Matter
+                </Link>
+              </nav>
             </div>
             <div className="flex items-center gap-3">
               <PresenceIndicator />
@@ -259,14 +343,14 @@ const DraftEditorContent: React.FC<{ draftId: string }> = ({ draftId }) => {
               </span>
               <button
                 onClick={handleExport}
-                disabled={!draft || draft.state === 'generating'}
+                disabled={!draft || (draft.state as string) === 'generating'}
                 className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
               >
                 📄 Export DOCX
               </button>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  draft.state === 'generating'
+                  (draft.state as string) === 'generating'
                     ? 'bg-yellow-100 text-yellow-800'
                     : draft.state === 'editing'
                     ? 'bg-blue-100 text-blue-800'

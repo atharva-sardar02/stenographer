@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { MatterService, Matter } from '../services/matter.service';
 import { MatterCard } from '../components/matters/MatterCard';
 import { CreateMatterModal } from '../components/matters/CreateMatterModal';
@@ -8,6 +9,7 @@ import { EmptyState } from '../components/common/EmptyState';
 
 export const Dashboard: React.FC = () => {
   const { user, userProfile, signOut } = useAuth();
+  const navigate = useNavigate();
   const [matters, setMatters] = useState<Matter[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,13 +85,34 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
+      {/* Header - Sticky */}
+      <header className="bg-white shadow sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Stenographer</h1>
-              <p className="text-sm text-gray-600">Demand Letter Generator</p>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/logo.png" 
+                  alt="Stenographer Logo" 
+                  className="h-10 w-10 object-contain"
+                  onError={(e) => {
+                    // Hide image if logo.png not found
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Stenographer</h1>
+                  <p className="text-sm text-gray-600">Demand Letter Generator</p>
+                </div>
+              </div>
+              <nav className="flex items-center gap-4">
+                <button
+                  onClick={() => navigate('/templates')}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                >
+                  Templates
+                </button>
+              </nav>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
